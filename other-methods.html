@@ -108,8 +108,86 @@
       </div>
     </section>
 
+    <!-- 1b. Identification in observational data -->
+    <section class="section on-light" aria-labelledby="identification">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Causal inference</p>
+          <h2 class="headline" id="identification" data-toc-label="Identification">Identifying effects without randomization.</h2>
+          <p class="lede">An observational estimate is causal only if you can name the source of variation in ad exposure and argue it is unrelated to what sales would have been anyway. That argument is the identification strategy.</p>
+        </div>
+
+        <div class="split split-top mt-m">
+          <div class="prose">
+            <h3>The selection problem</h3>
+            <p>For each unit we see only one potential outcome: sales with the ads (<em>Y</em><sub>1</sub>) or without them (<em>Y</em><sub>0</sub>). A naive exposed-vs-unexposed comparison mixes the effect with selection bias<sup class="cite"><a href="#ref-29">29</a></sup><sup class="cite"><a href="#ref-43">43</a></sup>:</p>
+            <p class="small"><strong>Observed difference</strong> = E[<em>Y</em><sub>1</sub> − <em>Y</em><sub>0</sub> | exposed] <span class="muted">(effect on the exposed, ATT)</span> + E[<em>Y</em><sub>0</sub> | exposed] − E[<em>Y</em><sub>0</sub> | unexposed] <span class="muted">(selection bias)</span></p>
+            <p>Advertising makes the second term large by design. Targeting, retargeting and bidding algorithms send ads to people who were already likely to buy, and activity bias adds people who were simply online more that day<sup class="cite"><a href="#ref-1">1</a></sup>. Every strategy below is a different way to make the selection-bias term zero.</p>
+          </div>
+          <div class="prose">
+            <h3>Start with a causal graph</h3>
+            <p>A directed acyclic graph (DAG) makes your assumptions explicit and tells you what to adjust for. Three junctions decide it<sup class="cite"><a href="#ref-30">30</a></sup><sup class="cite"><a href="#ref-31">31</a></sup>:</p>
+            <dl class="deflist">
+              <div><dt>Fork (confounder)</dt><dd>Exposure ← purchase intent → sales. Adjust for it. Seasonality, promotions, distribution and prior purchases play this role in media data.</dd></div>
+              <div><dt>Chain (mediator)</dt><dd>Exposure → site visits → sales. Do not adjust: a post-exposure variable blocks part of the effect you want. This is the "bad control" problem<sup class="cite"><a href="#ref-32">32</a></sup>.</dd></div>
+              <div><dt>Collider</dt><dd>Exposure → click ← purchase intent. Do not condition on it: analyzing only clickers or site visitors opens a spurious path.</dd></div>
+            </dl>
+            <p>If a set <em>Z</em> blocks every backdoor path without touching mediators or colliders, the effect is identified by the backdoor adjustment: P(<em>Y</em> | do(<em>X</em>)) = Σ<sub><em>z</em></sub> P(<em>Y</em> | <em>X</em>, <em>Z</em>=<em>z</em>) P(<em>Z</em>=<em>z</em>)<sup class="cite"><a href="#ref-30">30</a></sup>.</p>
+          </div>
+        </div>
+
+        <h3 class="subhead mt-l">Identification strategies and what they assume</h3>
+        <div class="table-scroll mt-m" role="region" aria-label="Identification strategies for observational data" tabindex="0">
+          <table class="compare compare-wide">
+            <caption>Each strategy removes selection bias through a different, mostly untestable, assumption</caption>
+            <thead>
+              <tr><th scope="col">Strategy</th><th scope="col">Removes bias by</th><th scope="col">Key assumption</th><th scope="col">Estimand</th><th scope="col">In media measurement</th></tr>
+            </thead>
+            <tbody>
+              <tr><td class="em">Selection on observables: regression, matching, IPW, doubly robust<sup class="cite"><a href="#ref-33">33</a></sup></td><td>Conditioning on measured covariates</td><td>No unmeasured confounders, plus overlap</td><td>ATE / ATT</td><td>The default in MMM and log-level models. Gordon et al. found it failed against RCT benchmarks even with 5,000+ user features<sup class="cite"><a href="#ref-4">4</a></sup>.</td></tr>
+              <tr><td class="em">Difference-in-differences<sup class="cite"><a href="#ref-37">37</a></sup></td><td>Differencing out stable gaps between groups</td><td>Parallel trends without treatment</td><td>ATT</td><td>Campaign launches in some markets but not others. Plot pre-trends, and use staggered-adoption estimators for rollouts (see <a href="geo-testing.html">Geo testing</a>).</td></tr>
+              <tr><td class="em">Synthetic control and generalized SC<sup class="cite"><a href="#ref-26">26</a></sup><sup class="cite"><a href="#ref-38">38</a></sup></td><td>A weighted donor pool that tracks the treated unit before launch</td><td>Good pre-period fit; no shocks unique to the treated unit</td><td>ATT for one or a few units</td><td>A national or regional launch with many untreated markets as donors.</td></tr>
+              <tr><td class="em">CausalImpact (BSTS)<sup class="cite"><a href="#ref-21">21</a></sup></td><td>Forecasting the treated series from control series</td><td>Controls unaffected by the campaign; stable pre-period relationship</td><td>ATT over time</td><td>Single-market or single-brand interventions; see above.</td></tr>
+              <tr><td class="em">Instrumental variables<sup class="cite"><a href="#ref-34">34</a></sup></td><td>A variable that shifts exposure but not sales directly</td><td>Relevance and exclusion; monotonicity for LATE</td><td>LATE: the effect for compliers only<sup class="cite"><a href="#ref-35">35</a></sup></td><td>Exposure shifted by something the advertiser does not control, such as variation in Super Bowl viewership driven by which teams play<sup class="cite"><a href="#ref-42">42</a></sup>.</td></tr>
+              <tr><td class="em">Regression discontinuity<sup class="cite"><a href="#ref-36">36</a></sup></td><td>Comparing units just either side of a cutoff</td><td>Continuity at the cutoff; no manipulation of the running variable</td><td>Local effect at the cutoff</td><td>Border designs: households a short distance apart but in different TV markets receive different advertising<sup class="cite"><a href="#ref-41">41</a></sup>.</td></tr>
+              <tr><td class="em">Metalearners (S/T/X-learner)<sup class="cite"><a href="#ref-43">43</a></sup></td><td>Flexible ML outcome models under selection on observables</td><td>Same as selection on observables</td><td>CATE: effects by segment</td><td>Heterogeneity in an experiment or a well-identified design. ML does not fix confounding.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="split split-top mt-l">
+          <div class="callout warning">
+            <p class="callout-title"><span class="icon icon-warning" aria-hidden="true"></span>Rich data is not identification</p>
+            <p>In advertising, the confounders that matter most (intent, activity, the platform's own targeting) are rarely fully observed. Adding more controls or a more flexible model cannot remove bias from a variable you never measured<sup class="cite"><a href="#ref-1">1</a></sup><sup class="cite"><a href="#ref-43">43</a></sup>. Prefer designs that exploit variation the advertiser did not choose: randomization first, then natural experiments, then conditioning.</p>
+          </div>
+          <div class="callout note">
+            <p class="callout-title">Local effects are still useful, but local</p>
+            <p>IV identifies the effect for compliers, and regression discontinuity identifies it at the cutoff<sup class="cite"><a href="#ref-35">35</a></sup><sup class="cite"><a href="#ref-36">36</a></sup>. Before using such an estimate in an MMM or a budget decision, ask whether that subgroup and spend level are the ones you are planning for.</p>
+          </div>
+        </div>
+
+        <h3 class="subhead mt-l">Sensitivity analysis: how wrong could the assumptions be?</h3>
+        <div class="split split-top mt-m">
+          <div class="prose">
+            <p>Unconfoundedness, exclusion and parallel trends cannot be proven from the data, so report how strong a violation would have to be to overturn the result<sup class="cite"><a href="#ref-39">39</a></sup>.</p>
+            <p>The <strong>E-value</strong> is the minimum risk-ratio association an unmeasured confounder would need with both exposure and outcome to fully explain away the estimate. For an observed risk ratio RR &gt; 1 it is <strong>RR + √(RR × (RR − 1))</strong><sup class="cite"><a href="#ref-40">40</a></sup>. For example, RR = 1.2 gives an E-value of about 1.69. A small E-value means modest hidden confounding, such as the targeting and activity effects above, could account for the whole effect.</p>
+            <p>Alternatives include Rosenbaum-style bounds for a hidden binary confounder and copula-based Bayesian sensitivity analysis<sup class="cite"><a href="#ref-39">39</a></sup>.</p>
+          </div>
+          <ul class="checklist">
+            <li><strong>Draw the DAG first</strong><span class="muted">Write down how exposure is assigned before choosing an estimator.</span></li>
+            <li><strong>Adjust only for pre-exposure variables</strong><span class="muted">No visits, clicks or searches that the ads could have caused.</span></li>
+            <li><strong>Check overlap and balance</strong><span class="muted">Exposed and unexposed units must be comparable on the covariates you condition on.</span></li>
+            <li><strong>Test the design's own assumption</strong><span class="muted">Pre-trends for DiD, pre-period fit for synthetic control, covariate and density checks at an RD cutoff.</span></li>
+            <li><strong>Run placebos</strong><span class="muted">Fake launch dates and untreated outcomes should show no effect.</span></li>
+            <li><strong>Report sensitivity</strong><span class="muted">An E-value or bounds next to every causal claim.</span></li>
+            <li><strong>Benchmark against an experiment</strong><span class="muted">Where possible, check the method on a channel with a lift test before trusting it elsewhere.</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
     <!-- 2. MMM: specification, adstock, saturation -->
-    <section class="section on-light" aria-labelledby="mmm">
+    <section class="section on-mist" aria-labelledby="mmm">
       <div class="wrap">
         <div class="section-head">
           <p class="eyebrow">Media mix modeling</p>
@@ -142,7 +220,7 @@
     </section>
 
     <!-- 3. Priors -->
-    <section class="section on-mist" aria-labelledby="priors">
+    <section class="section on-light" aria-labelledby="priors">
       <div class="wrap">
         <div class="section-head">
           <p class="eyebrow">Bayesian estimation</p>
@@ -172,7 +250,7 @@
     </section>
 
     <!-- 4. ROAS vs mROAS -->
-    <section class="section on-light" aria-labelledby="roas">
+    <section class="section on-mist" aria-labelledby="roas">
       <div class="wrap">
         <div class="section-head">
           <p class="eyebrow">Budget decisions</p>
@@ -198,7 +276,7 @@
     </section>
 
     <!-- 5. Data, tools, pros/cons -->
-    <section class="section on-mist" aria-labelledby="mmm-practice">
+    <section class="section on-light" aria-labelledby="mmm-practice">
       <div class="wrap">
         <div class="section-head">
           <p class="eyebrow">MMM in practice</p>
@@ -691,6 +769,21 @@
           <li id="ref-26"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Econometrics/Identification-Strategies/Synthetic-Control">Synthetic Control</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">synthetic control definition and placebo inference.</span></li>
           <li id="ref-27"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Market-Response-Models/Introduction/Market-Response-Models---Overview">Market Response Models: Overview</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">market response modeling lineage.</span></li>
           <li id="ref-28"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Research-Methodology/Experimental-Design/Power-Analysis-and-Sample-Size">Power Analysis and Sample Size</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">further reading on planning the experiments that calibrate models.</span></li>
+          <li id="ref-29"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Econometrics/Foundations/The-Selection-Problem">The Selection Problem</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">potential outcomes; ATT plus selection-bias decomposition.</span></li>
+          <li id="ref-30"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Econometrics/Foundations/Directed-Acyclic-Graphs">Directed Acyclic Graphs</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">forks, chains, colliders; backdoor adjustment formula.</span></li>
+          <li id="ref-31"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Econometrics/Identification-Strategies/DAGs-and-Causal-Identification">DAGs and Causal Identification</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">using DAGs to choose a valid adjustment set.</span></li>
+          <li id="ref-32"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Econometrics/Regression-Foundations/Conditional-Independence-Assumption">Conditional Independence Assumption</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">selection on observables; bad controls.</span></li>
+          <li id="ref-33"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Bayesian-Statistics/Causal-Inference/Foundations/Frequentist-Causal-Estimation">Frequentist Causal Estimation</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">regression adjustment, IPW and doubly robust estimators.</span></li>
+          <li id="ref-34"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Econometrics/Identification-Strategies/Instrumental-Variables">Instrumental Variables</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">relevance and exclusion; Wald estimator; 2SLS.</span></li>
+          <li id="ref-35"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Econometrics/Identification-Strategies/Local-Average-Treatment-Effects">Local Average Treatment Effects</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">IV identifies the effect for compliers (LATE).</span></li>
+          <li id="ref-36"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Econometrics/Identification-Strategies/Regression-Discontinuity-Designs">Regression Discontinuity Designs</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">sharp and fuzzy RD; continuity and manipulation checks.</span></li>
+          <li id="ref-37"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Econometrics/Identification-Strategies/Differences-in-Differences">Differences-in-Differences</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">common-trends assumption; pre-trend checks.</span></li>
+          <li id="ref-38"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Econometrics/Identification-Strategies/Generalized-Synthetic-Control-Method">Generalized Synthetic Control Method</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">interactive fixed effects; multiple treated units.</span></li>
+          <li id="ref-39"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Bayesian-Statistics/Causal-Inference/Sensitivity-and-Complex-Mechanisms/Sensitivity-Analysis-in-Observational-Studies">Sensitivity Analysis in Observational Studies</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">E-value, Rosenbaum-style bounds, copula sensitivity.</span></li>
+          <li id="ref-40"><a class="ref-title" href="https://doi.org/10.7326/M16-2607">Sensitivity Analysis in Observational Research: Introducing the E-Value</a> <span class="ref-meta">VanderWeele &amp; Ding (2017), Annals of Internal Medicine 167(4):268–274</span><span class="ref-supports">E-value definition and formula.</span></li>
+          <li id="ref-41"><a class="ref-title" href="https://ideas.repec.org/a/ucp/jpolec/doi10.1086-695475.html">Positive Spillovers and Free Riding in Advertising of Prescription Pharmaceuticals: The Case of Antidepressants</a> <span class="ref-meta">Shapiro (2018), Journal of Political Economy 126(1):381–437</span><span class="ref-supports">TV-market border discontinuity as an identification strategy for advertising effects.</span></li>
+          <li id="ref-42"><a class="ref-title" href="https://econpapers.repec.org/RePEc:inm:ormksc:v:37:y:2018:i:1:p:78-96">Super Bowl Ads</a> <span class="ref-meta">Hartmann &amp; Klapper (2018), Marketing Science 37(1):78–96</span><span class="ref-supports">viewership variation driven by which teams play as a natural experiment in ad exposure.</span></li>
+          <li id="ref-43"><a class="ref-title" href="https://redam94.github.io/second-brain/Questions-and-Answers/Q---Uncovering-Causal-Estimates-from-Non-Experimental-Data">Q: Ways to uncover causal estimates from non-experimental data</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">overview of identification strategies, their assumptions and estimands; metalearners.</span></li>
         </ol>
       </div>
     </section>

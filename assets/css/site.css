@@ -427,6 +427,7 @@ a:hover { text-decoration-thickness: 2px; }
   gap: clamp(28px, 5vw, 64px);
 }
 .split.reverse > :first-child { order: 2; }
+.split.split-top { align-items: start; }
 @media (max-width: 800px) {
   .split { grid-template-columns: minmax(0, 1fr); }
   .split.reverse > :first-child { order: 0; }
