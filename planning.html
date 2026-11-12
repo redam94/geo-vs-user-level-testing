@@ -1,0 +1,848 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Planning · Geo vs User-Level Testing</title>
+  <meta name="description" content="Plan a media incrementality test end to end: KPI, pre-registration, power and MDE, design, holdout sizing, timing, budget, contamination, QA, analysis and MMM.">
+  <meta name="theme-color" content="#000000">
+  <meta name="color-scheme" content="light">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Geo vs User-Level Testing">
+  <meta property="og:title" content="Planning · Geo vs User-Level Testing">
+  <meta property="og:description" content="Plan a media incrementality test end to end: KPI, pre-registration, power and MDE, design, holdout sizing, timing, budget, contamination, QA, analysis and MMM.">
+  <meta property="og:url" content="https://redam94.github.io/geo-vs-user-level-testing/planning.html">
+  <meta property="og:image" content="https://redam94.github.io/geo-vs-user-level-testing/assets/img/hero.webp">
+  <meta property="og:image:alt" content="A minimal 3D map of U.S. regions, some highlighted olive as test markets, dissolving into a grid of individual dots representing people.">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/svg+xml" href="assets/icons/split.svg">
+  <link rel="stylesheet" href="assets/css/site.css">
+  <script src="assets/js/site.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="nav">
+    <div class="nav-inner">
+      <a class="nav-brand" href="index.html"><span class="icon icon-split" aria-hidden="true"></span>Geo vs User Testing</a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu"><span class="nav-toggle-bars" aria-hidden="true"></span><span class="sr-only">Menu</span></button>
+      <nav class="nav-menu" id="nav-menu" aria-label="Primary">
+        <ul class="nav-links">
+          <li><a href="index.html">Overview</a></li>
+          <li><a href="geo-testing.html">Geo testing</a></li>
+          <li><a href="user-level-testing.html">User-level testing</a></li>
+          <li><a href="compare.html">Compare</a></li>
+          <li><a href="planning.html" aria-current="page">Planning</a></li>
+          <li><a href="other-methods.html">Other methods</a></li>
+          <li><a href="sources.html">Sources</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- Sub-hero -->
+    <section class="subhero on-dark" aria-labelledby="page-title">
+      <div class="wrap">
+        <span class="icon-badge"><span class="icon icon-calendar" aria-hidden="true"></span></span>
+        <p class="eyebrow">Test planning</p>
+        <h1 class="subhero-title" id="page-title">Plan the test before you buy the media.</h1>
+        <p class="subhero-lede">How to take a media incrementality test from question to readout: the KPI, power and MDE, design, markets or audiences, timing, budget, contamination controls, launch checks, analysis plan, and how the result feeds your MMM.</p>
+        <div class="meta"><span>Phases: pre-test, in-flight, post</span><span>Applies to: geo and user-level tests</span><span>Output: a pre-registered plan</span></div>
+        <div class="subhero-media">
+          <img src="assets/img/planning.webp" width="1000" height="671" alt="A floating calendar grid with a few olive-highlighted days, an S-shaped power curve ribbon behind it, and a thin timeline below.">
+        </div>
+      </div>
+    </section>
+
+    <!-- TOC -->
+    <div class="toc-band on-light">
+      <div class="wrap">
+        <nav class="toc" data-toc aria-label="On this page"></nav>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <section class="section on-mist" aria-labelledby="timeline">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">The plan on one page</p>
+          <h2 class="headline" id="timeline" data-toc-label="Timeline">Twelve steps, three phases.</h2>
+          <p class="lede">Most of the work happens before launch. Once media is live, your job is to keep the test healthy, not to read results. After the flight, you analyze exactly what you wrote down.</p>
+        </div>
+        <ol class="steps steps-vertical mt-m">
+          <li>
+            <p class="eyebrow">Pre-test</p>
+            <h3>Define the decision, the question and the primary KPI</h3>
+            <p>Name the decision the test feeds and the number it produces: iROAS, lift % or incremental conversions. <a href="#question">Details</a></p>
+          </li>
+          <li>
+            <p class="eyebrow">Pre-test</p>
+            <h3>Write the hypothesis and pre-register it</h3>
+            <p>Timestamp the KPI, estimand, estimator, windows and decision rule before launch. <a href="#preregister">Details</a></p>
+          </li>
+          <li>
+            <p class="eyebrow">Pre-test</p>
+            <h3>Run power, MDE and design calculations</h3>
+            <p>Closed-form formulas for user tests, simulation on history for geo tests, plus Type S and Type M checks. <a href="#power">Details</a></p>
+          </li>
+          <li>
+            <p class="eyebrow">Pre-test</p>
+            <h3>Choose the design and estimator</h3>
+            <p>Geo or user, randomized or matched, heavy-up or go-dark. <a href="#design">Details</a></p>
+          </li>
+          <li>
+            <p class="eyebrow">Pre-test</p>
+            <h3>Select markets or audiences and size the holdout</h3>
+            <p>Trade power against the opportunity cost of the control group, and compute both. <a href="#selection">Details</a></p>
+          </li>
+          <li>
+            <p class="eyebrow">Pre-test</p>
+            <h3>Set duration, pre-period and cooldown, and confirm budget</h3>
+            <p>At least one purchase cycle, enough clean history, and a post-period for lagged conversions. <a href="#timing">Details</a></p>
+          </li>
+          <li>
+            <p class="eyebrow">Pre-test</p>
+            <h3>Lock contamination controls</h3>
+            <p>Freeze other media and promotions, drop buffer geos from the donor pool, exclude control users from retargeting pools. <a href="#contamination">Details</a></p>
+          </li>
+          <li>
+            <p class="eyebrow">In-flight</p>
+            <h3>Launch QA</h3>
+            <p>Check the realized split, covariate balance, delivery and logging in the first days. <a href="#launch">Details</a></p>
+          </li>
+          <li>
+            <p class="eyebrow">In-flight</p>
+            <h3>Monitor health, not results</h3>
+            <p>Watch pacing and delivery. Do not stop early because the dashboard turns significant. <a href="#launch">Details</a></p>
+          </li>
+          <li>
+            <p class="eyebrow">Post</p>
+            <h3>Cooldown</h3>
+            <p>Keep measuring after media stops, to capture delayed and offline conversions. <a href="#timing">Details</a></p>
+          </li>
+          <li>
+            <p class="eyebrow">Post</p>
+            <h3>Analyze per plan and run diagnostics</h3>
+            <p>Pre-registered estimator, pre-fit checks, placebos and leave-one-out. <a href="#analysis">Details</a></p>
+          </li>
+          <li>
+            <p class="eyebrow">Post</p>
+            <h3>Read out and feed the MMM</h3>
+            <p>Report the interval and the decision, then convert the result into MMM calibration evidence. <a href="#readout">Details</a></p>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- Question & KPI -->
+    <section class="section on-light" aria-labelledby="question">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Step 1</p>
+          <h2 class="headline" id="question" data-toc-label="Question &amp; KPI">Start with the decision, not the dashboard.</h2>
+          <p class="lede">A test exists to change a decision. Write the decision down first, then pick the one number that would change it.</p>
+        </div>
+        <div class="split mt-m">
+          <div class="prose">
+            <p>State the decision the test feeds, for example "cut or keep linear TV in region X", and the estimand: iROAS, lift % or incremental conversions. Decide <strong>one-sided or two-sided</strong> in advance. A one-sided test gains power when the direction is known<sup class="cite"><a href="#ref-1">1</a></sup>.</p>
+            <p>Pick the <strong>business outcome closest to the decision</strong>, such as sales or new customers. Proxy KPIs raise power but must be validated, and leading indicators help when the post-period is short<sup class="cite"><a href="#ref-2">2</a></sup>. For user-level tests, choose one primary KPI in advance. Purchase revenue is noisier than a conversion count, so consider winsorizing or capping it.</p>
+            <p>In user-level tests, many people in the test group never see an ad. Decide whether you report the effect of being <em>eligible</em> (ITT) or of being <em>exposed</em> (TOT). Under one-sided noncompliance, <strong>ITT = TOT × exposure rate</strong>: if 20% of the test group sees the ad, the ITT effect is one fifth of the TOT effect, while the noise still comes from the whole population<sup class="cite"><a href="#ref-3">3</a></sup>.</p>
+          </div>
+          <dl class="deflist">
+            <div><dt>iROAS</dt><dd>Incremental revenue divided by the spend that caused it. In geo-based regression it is the coefficient on incremental spend<sup class="cite"><a href="#ref-4">4</a></sup>.</dd></div>
+            <div><dt>Lift %</dt><dd>Incremental outcome as a share of the counterfactual outcome.</dd></div>
+            <div><dt>Incremental conversions</dt><dd>Test-group outcome minus the counterfactual, in units.</dd></div>
+            <div><dt>ITT</dt><dd>Intent-to-treat: the effect of being eligible for ads. Protected by randomization; report it as the primary estimate.</dd></div>
+            <div><dt>TOT</dt><dd>Treatment-on-the-treated: ITT divided by the exposure rate (a Wald estimator).</dd></div>
+            <div><dt>MDE</dt><dd>Minimum detectable effect: the smallest effect the design can reliably detect at the chosen α and power<sup class="cite"><a href="#ref-5">5</a></sup>.</dd></div>
+          </dl>
+        </div>
+        <div class="prose mt-m">
+          <div class="callout tip">
+            <p class="callout-title">Tip: derive the MDE from break-even economics</p>
+            <p>The smallest lift worth detecting is usually the one that makes iROAS equal to 1, or to your target, given the planned spend. A test that can only detect lifts far above that line cannot answer the business question.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pre-registration -->
+    <section class="section on-mist" aria-labelledby="preregister">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Step 2</p>
+          <h2 class="headline" id="preregister" data-toc-label="Pre-registration">Write it down before the data arrives.</h2>
+          <p class="lede">Data-contingent analysis choices inflate false positives even without deliberate fishing. A timestamped plan removes the forks<sup class="cite"><a href="#ref-6">6</a></sup><sup class="cite"><a href="#ref-7">7</a></sup>.</p>
+        </div>
+        <div class="split mt-m">
+          <div class="prose">
+            <p>Gelman and Loken's "garden of forking paths" is the reason to pre-register: every choice made after seeing the data (which KPI, which window, which segments, which outliers) is another chance to find a result that is not there<sup class="cite"><a href="#ref-6">6</a></sup>. An internal document, timestamped before launch, is enough.</p>
+            <p>Geo designs are pre-registrable too. Synthetic-control weights depend only on pre-period data, so the market sets, donor pool and weights can be locked before any post-period outcome exists. That guards against specification searching<sup class="cite"><a href="#ref-2">2</a></sup>.</p>
+            <div class="callout note">
+              <p class="callout-title">Note</p>
+              <p>Pre-registration does not forbid exploratory analysis. It labels it. Segments you did not list as confirmatory are hypotheses for the next test, not findings from this one.</p>
+            </div>
+          </div>
+          <ul class="checklist">
+            <li><strong>Hypothesis and primary KPI</strong></li>
+            <li><strong>Estimand</strong><span class="muted">ITT vs TOT; iROAS, lift % or incremental conversions</span></li>
+            <li><strong>Randomization unit and split</strong><span class="muted">Or, for geo tests, the market sets and donor pool</span></li>
+            <li><strong>Estimator</strong></li>
+            <li><strong>MDE, power, α and sidedness</strong></li>
+            <li><strong>Test window, conversion window and cooldown</strong></li>
+            <li><strong>Covariates for CUPED or ANCOVA</strong></li>
+            <li><strong>Outlier rules</strong><span class="muted">For example revenue caps</span></li>
+            <li><strong>Segments</strong><span class="muted">Confirmatory vs exploratory</span></li>
+            <li><strong>Decision rule</strong><span class="muted">For example "scale if the iROAS lower 80% bound is above 1"</span></li>
+          </ul>
+        </div>
+        <p class="small muted mt-m">Checklist combined from the author's notes on pre-registration for user-level tests and for synthetic-control geo designs<sup class="cite"><a href="#ref-7">7</a></sup><sup class="cite"><a href="#ref-2">2</a></sup>.</p>
+      </div>
+    </section>
+
+    <!-- Power & MDE -->
+    <section class="section on-light" aria-labelledby="power">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="icon-badge"><span class="icon icon-target" aria-hidden="true"></span></span>
+          <p class="eyebrow">Step 3</p>
+          <h2 class="headline" id="power" data-toc-label="Power &amp; MDE">Power, MDE and sample size.</h2>
+          <p class="lede">Advertising effects are small and outcomes are noisy. Power is the constraint that decides whether a test is worth running at all.</p>
+        </div>
+
+        <ul class="stats mt-m">
+          <li class="stat"><span class="stat-value">≈10</span><span class="stat-label">Typical coefficient of variation of individual sales in large ad experiments</span><span class="stat-note">Lewis &amp; Rao (2015)<sup class="cite"><a href="#ref-8">8</a></sup></span></li>
+          <li class="stat"><span class="stat-value">&gt;10M</span><span class="stat-label">Person-weeks an informative experiment can easily require</span><span class="stat-note">Lewis &amp; Rao (2015)<sup class="cite"><a href="#ref-8">8</a></sup></span></li>
+          <li class="stat"><span class="stat-value">&gt;100 pp</span><span class="stat-label">Median ROI confidence-interval width across 25 experiments (about $2.8M of spend)</span><span class="stat-note">Lewis &amp; Rao (2015)<sup class="cite"><a href="#ref-8">8</a></sup></span></li>
+        </ul>
+
+        <div class="split mt-l">
+          <div class="prose">
+            <h3>User-level tests: closed-form power</h3>
+            <p>The inputs are α (often 0.05, two-sided), power 1−β (0.80 or 0.90), the baseline variance σ², and the MDE you care about economically<sup class="cite"><a href="#ref-5">5</a></sup>.</p>
+            <p><strong>Two means</strong>, N per group:</p>
+            <p><code>N = 2 (z₁₋α/₂ + z₁₋β)² σ² / d²</code></p>
+            <p>With α = 0.05 and power = 0.80, (1.96 + 0.84)² ≈ 7.84<sup class="cite"><a href="#ref-5">5</a></sup>.</p>
+            <p>Rearranged for a sample you can actually afford, the same formula gives the MDE: <code>d = (z₁₋α/₂ + z₁₋β) · σ · √(1/n<sub>test</sub> + 1/n<sub>control</sub>)</code>, which is about 2.8 · σ · √(2/N) for a 50/50 split at α = 0.05 and 80% power. This is the algebraic inverse of the formula above, not a separate result.</p>
+            <p><strong>Two proportions</strong> (conversion rate), with allocation ratio r:</p>
+            <p><code>N = (z₁₋α/₂ + z₁₋β)² · p̄(1−p̄)(1+r) / (r·d²)</code></p>
+            <p>Here p̄ is the average conversion rate, d the difference in rates and r = n₁/n₂<sup class="cite"><a href="#ref-5">5</a></sup>. Solved this way, N is the size of group 2; group 1 gets r·N.</p>
+            <p><strong>Attrition:</strong> inflate to N / (1−q). Base the effect size on prior studies or pilots, not hope<sup class="cite"><a href="#ref-5">5</a></sup>.</p>
+            <h3>Three ad-specific adjustments</h3>
+            <ul>
+              <li><strong>Power the ITT, not the TOT.</strong> Expected ITT effect = expected TOT lift × expected exposure rate. Dilution shrinks the signal but not the noise<sup class="cite"><a href="#ref-3">3</a></sup>.</li>
+              <li><strong>Unequal splits cost sample.</strong> Variance scales with 1/n<sub>test</sub> + 1/n<sub>control</sub>, so a 90/10 split needs a much larger total N than 50/50 for the same MDE: 1/0.9 + 1/0.1 ≈ 11.1 against 4 for 50/50, or about 2.8 times the total sample.</li>
+              <li><strong>Start from break-even.</strong> Use the lift that makes iROAS = 1 (or your target) as the MDE.</li>
+            </ul>
+          </div>
+          <div class="prose">
+            <h3>Geo tests: power by simulation</h3>
+            <p>Geo tests are almost always powered by <strong>simulation on historical data</strong>, not by closed-form formulas.</p>
+            <ul>
+              <li>GeoLift's <code>GeoLiftMarketSelection()</code> simulates synthetic effects over candidate market sets, durations and effect sizes. The walkthrough uses effect sizes of 0–50% in 5-point steps, α = 0.1, 2–5 test markets and 10–15 day tests, and accepts a <code>budget</code> and cost per incremental conversion (<code>cpic</code>). Re-check the top candidates with a longer lookback window to confirm that power holds over time<sup class="cite"><a href="#ref-9">9</a></sup>.</li>
+              <li>Google recommends stating precision as a target CI half-width on iROAS (for example ±1.0) together with a false-positive rate<sup class="cite"><a href="#ref-4">4</a></sup>.</li>
+              <li>A bigger spend contrast buys more power, limited by inventory and diminishing returns<sup class="cite"><a href="#ref-4">4</a></sup>.</li>
+              <li>The expected effect must be large relative to geo-level noise. A small effect in a short test is the case to avoid<sup class="cite"><a href="#ref-2">2</a></sup>.</li>
+            </ul>
+            <h3>Levers that buy power</h3>
+            <ul>
+              <li><strong>Ghost ads</strong> instead of PSA or plain ITT holdouts: advertisers can measure lift "just as precisely while spending at least an order of magnitude less"<sup class="cite"><a href="#ref-3">3</a></sup>.</li>
+              <li><strong>CUPED or regression adjustment</strong> on pre-period outcomes of the same users. The covariate must be unaffected by treatment<sup class="cite"><a href="#ref-10">10</a></sup><sup class="cite"><a href="#ref-11">11</a></sup>. Residual variance is about (1 − ρ²) times the original, where ρ is the pre/post correlation, so gains are largest for repeat-purchase KPIs and smallest for acquisition KPIs.</li>
+              <li><strong>A higher-signal KPI</strong>, validated against the business outcome<sup class="cite"><a href="#ref-2">2</a></sup>.</li>
+              <li><strong>A one-sided test</strong>, when the direction is known in advance<sup class="cite"><a href="#ref-1">1</a></sup>.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="prose mt-m">
+          <div class="callout caveat">
+            <p class="callout-title"><span class="icon icon-warning" aria-hidden="true"></span>Caveat: plan for small lifts</p>
+            <p>Expect true lifts in the low single digits for many upper-funnel campaigns, and do not plan around optimistic 20–30% lifts <span class="flag">practitioner heuristic</span>. The CUPED "squared correlation" rule is standard algebra, not a figure from the CUPED paper; no specific variance-reduction magnitudes are quoted here because none were verified.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Type S/M & multiple testing -->
+    <section class="section on-mist" aria-labelledby="errors">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Beyond power</p>
+          <h2 class="headline" id="errors" data-toc-label="Type S/M &amp; multiplicity">Wrong signs, inflated effects, too many looks.</h2>
+          <p class="lede">Power tells you how often you will detect an effect. It does not tell you how wrong a "significant" estimate can be, or how many false positives a stack of KPIs and segments will produce.</p>
+        </div>
+        <div class="tiles mt-m">
+          <article class="tile on-light">
+            <div class="tile-copy">
+              <span class="icon-badge tile-icon"><span class="icon icon-power-curve" aria-hidden="true"></span></span>
+              <h3 class="tile-title">Type S and Type M errors</h3>
+              <p class="tile-tag">Underpowered tests that clear significance are systematically exaggerated.</p>
+              <p class="tile-desc"><strong>Type S:</strong> a significant estimate has the wrong sign. <strong>Type M:</strong> it exaggerates the true magnitude (exaggeration ratio = |estimate| / |truth|). Large estimates are a by-product of large standard errors<sup class="cite"><a href="#ref-12">12</a></sup>. Gelman &amp; Carlin recommend <strong>design calculations</strong> from realistic external effect sizes: compute the probability of a wrong sign and the expected exaggeration, not power alone<sup class="cite"><a href="#ref-13">13</a></sup>.</p>
+              <p class="tile-desc">In practice: assume a plausible true lift (for example 2–3%), compute your design's standard error, and report P(Type S) and the expected exaggeration ratio. If the ratio is above 2, redesign before launch <span class="flag">rule of thumb</span>.</p>
+            </div>
+          </article>
+          <article class="tile on-light">
+            <div class="tile-copy">
+              <span class="icon-badge tile-icon"><span class="icon icon-layers" aria-hidden="true"></span></span>
+              <h3 class="tile-title">Multiple testing</h3>
+              <p class="tile-tag">With m independent tests at α = 0.05, P(at least one false positive) = 1 − 0.95<sup>m</sup>.</p>
+              <p class="tile-desc">In lift studies, multiplicity hides in multi-cell designs, many KPIs, many segments (age × gender × region) and several readout dates. Bonferroni and Holm control the family-wise error rate (conservative); Benjamini–Hochberg controls the false discovery rate (more power)<sup class="cite"><a href="#ref-14">14</a></sup>.</p>
+              <p class="tile-desc">The Bayesian alternative is partial pooling: hierarchical models shrink noisy subgroup estimates, reducing Type S and M errors by improving the estimates rather than widening intervals<sup class="cite"><a href="#ref-12">12</a></sup><sup class="cite"><a href="#ref-15">15</a></sup>.</p>
+            </div>
+          </article>
+        </div>
+
+        <table class="compare mt-l">
+          <caption>Chance of at least one false positive at α = 0.05<sup class="cite"><a href="#ref-14">14</a></sup></caption>
+          <thead>
+            <tr><th scope="col">Independent tests (m)</th><th scope="col">P(≥1 false positive)</th><th scope="col">Where it shows up</th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">1</th><td data-label="P(≥1 false positive)" class="num">5%</td><td data-label="Where it shows up">One pre-registered primary KPI</td></tr>
+            <tr><th scope="row">10</th><td data-label="P(≥1 false positive)" class="num">about 40%</td><td data-label="Where it shows up">A few KPIs read on a few dates</td></tr>
+            <tr><th scope="row">100</th><td data-label="P(≥1 false positive)" class="num">about 99%</td><td data-label="Where it shows up">Segment grids such as age × gender × region</td></tr>
+          </tbody>
+        </table>
+
+        <div class="prose mt-m">
+          <div class="callout caveat">
+            <p class="callout-title"><span class="icon icon-warning" aria-hidden="true"></span>Caveat: bias is not Type M</p>
+            <p>The author's notes frame the Yahoo! gap (observational +1198% vs randomized +5.4%) as an extreme, roughly 220×, Type-M-style exaggeration<sup class="cite"><a href="#ref-12">12</a></sup>. Strictly, that gap is <em>bias</em> from violated identification, not sampling-driven Type M error. Treat it as an illustration, not a definition.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Design choice -->
+    <section class="section on-light" aria-labelledby="design">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Step 4</p>
+          <h2 class="headline" id="design" data-toc-label="Choose the design">Choose the design that fits the question.</h2>
+          <p class="lede">The channel, the KPI and the number of available units decide most of this. For the full side-by-side, see <a href="compare.html">Compare</a>.</p>
+        </div>
+        <ol class="decision mt-m">
+          <li><p class="decision-q">Is the channel impossible to target person by person (TV, radio, OOH, print), or is the KPI only observed offline or in aggregate?</p><p class="decision-a"><strong>Geo test.</strong> It needs no user identity and captures offline sales and delayed conversions<sup class="cite"><a href="#ref-4">4</a></sup>. See <a href="geo-testing.html">Geo testing</a>.</p></li>
+          <li><p class="decision-q">About 30 or more geos, and you can randomize?</p><p class="decision-a"><strong>Stratified randomized geo experiment with geo-based regression</strong>, or a paired design with Trimmed Match when geos are heterogeneous<sup class="cite"><a href="#ref-4">4</a></sup><sup class="cite"><a href="#ref-16">16</a></sup>.</p></li>
+          <li><p class="decision-q">Few geos, or a single market?</p><p class="decision-a"><strong>Time-based regression or synthetic control</strong>, with an algorithmic matched-market design. TBR works down to one test region against one control<sup class="cite"><a href="#ref-17">17</a></sup><sup class="cite"><a href="#ref-18">18</a></sup>.</p></li>
+          <li><p class="decision-q">Several treated geos and imperfect pre-period fit?</p><p class="decision-a"><strong>Augmented synthetic control (GeoLift) or generalized synthetic control.</strong> GSC needs a large control pool and a long pre-period<sup class="cite"><a href="#ref-9">9</a></sup><sup class="cite"><a href="#ref-19">19</a></sup>.</p></li>
+          <li><p class="decision-q">An always-on channel where you want to limit the revenue at risk?</p><p class="decision-a"><strong>Go-dark holdout (Inverse GeoLift).</strong> GeoLift says "ongoing media is best tested with an Inverse GeoLift"<sup class="cite"><a href="#ref-20">20</a></sup>.</p></li>
+          <li><p class="decision-q">A phased rollout across markets?</p><p class="decision-a"><strong>Staggered difference-in-differences (Callaway–Sant'Anna)</strong>, not a plain two-way fixed-effects regression, which can put negative weights on some effects<sup class="cite"><a href="#ref-21">21</a></sup><sup class="cite"><a href="#ref-22">22</a></sup>.</p></li>
+          <li><p class="decision-q">A digital channel with addressable identity, and a question about creative, audience, bidding or frequency?</p><p class="decision-a"><strong>User-level multi-cell test</strong>, such as a platform conversion-lift study with several cells<sup class="cite"><a href="#ref-23">23</a></sup>. See <a href="user-level-testing.html">User-level testing</a>.</p></li>
+          <li><p class="decision-q">The platform offers ghost ads?</p><p class="decision-a"><strong>Prefer ghost ads to PSA designs.</strong> Delivery optimization serves PSA and brand ads to different people; Johnson et al. show a PSA test would be "severely biased" for a retargeting campaign<sup class="cite"><a href="#ref-3">3</a></sup>.</p></li>
+          <li><p class="decision-q">You need a read on a walled garden that does not come from the walled garden?</p><p class="decision-a"><strong>Send your own conversions, replicate in a clean room, and calibrate platform lift against geo tests.</strong> Google's geography-based Conversion Lift takes outcomes outside the user graph and supports offline data<sup class="cite"><a href="#ref-24">24</a></sup>.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- Market / audience selection -->
+    <section class="section on-mist" aria-labelledby="selection">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Step 5</p>
+          <h2 class="headline" id="selection" data-toc-label="Markets &amp; audiences">Pick the units: markets or audiences.</h2>
+          <p class="lede">For geo tests the hard part is finding comparable, uncontaminated markets. For user tests it is finding an identity that both the ad platform and your outcome data can see.</p>
+        </div>
+        <div class="tiles mt-m">
+          <article class="tile on-light">
+            <div class="tile-copy">
+              <span class="icon-badge tile-icon"><span class="icon icon-geo-pin" aria-hidden="true"></span></span>
+              <h3 class="tile-title">Geo markets</h3>
+              <div class="prose">
+                <ul>
+                  <li><strong>Randomize when possible.</strong> Stratify by geo size, and possibly by region<sup class="cite"><a href="#ref-4">4</a></sup>. Use paired designs when geos are heterogeneous<sup class="cite"><a href="#ref-16">16</a></sup>.</li>
+                  <li><strong>Matched markets</strong> when you cannot randomize: let an algorithm search (TBR matched markets, GeoLift market selection) rather than intuition<sup class="cite"><a href="#ref-18">18</a></sup><sup class="cite"><a href="#ref-9">9</a></sup>.</li>
+                  <li><strong>Enough units.</strong> Geo-based regression prefers 30 or more geos; GeoLift asks for at least 20 geo-units<sup class="cite"><a href="#ref-4">4</a></sup><sup class="cite"><a href="#ref-25">25</a></sup>. Permutation inference is not meaningful with fewer than about 5 donors<sup class="cite"><a href="#ref-2">2</a></sup>.</li>
+                  <li><strong>Avoid dominant markets.</strong> London and Paris "dominate entire countries"<sup class="cite"><a href="#ref-4">4</a></sup>. Treated units should sit inside the donors' convex hull<sup class="cite"><a href="#ref-2">2</a></sup>.</li>
+                  <li><strong>Exclude contaminated donors</strong>: neighbours of treated geos and geos running similar interventions<sup class="cite"><a href="#ref-2">2</a></sup>.</li>
+                  <li><strong>Clean data.</strong> Location, date and KPI with no missing location-dates; GeoLift drops locations with gaps<sup class="cite"><a href="#ref-9">9</a></sup>.</li>
+                </ul>
+              </div>
+            </div>
+          </article>
+          <article class="tile on-light">
+            <div class="tile-copy">
+              <span class="icon-badge tile-icon"><span class="icon icon-user" aria-hidden="true"></span></span>
+              <h3 class="tile-title">User audiences</h3>
+              <div class="prose">
+                <ul>
+                  <li><strong>One ID for delivery and outcomes.</strong> A logged-in account, consented device ID, first-party cookie or hashed email that the platform delivers to and that conversions can be joined to.</li>
+                  <li><strong>Person over cookie.</strong> Cross-device users need a person-level ID, or test and control leak into each other.</li>
+                  <li><strong>Randomize before the auction.</strong> Splitting campaigns instead of users lets the delivery algorithm send each arm to different people<sup class="cite"><a href="#ref-3">3</a></sup>. Meta's lift studies randomize Accounts Center accounts<sup class="cite"><a href="#ref-23">23</a></sup>.</li>
+                  <li><strong>Check identity coverage.</strong> iOS users who opt out under App Tracking Transparency drop out of cross-app matching, leaving a smaller, non-random slice<sup class="cite"><a href="#ref-26">26</a></sup>.</li>
+                  <li><strong>Size the audience.</strong> Typically hundreds of thousands to tens of millions of users per arm, following from the Lewis &amp; Rao noise levels<sup class="cite"><a href="#ref-8">8</a></sup>. Compute it from your own baseline rate and variance.</li>
+                </ul>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Holdout sizing -->
+    <section class="section on-light" aria-labelledby="sizing">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Step 5, continued</p>
+          <h2 class="headline" id="sizing" data-toc-label="Holdout sizing">Size the holdout: power against opportunity cost.</h2>
+          <p class="lede">A bigger control group gives more power and costs more forgone revenue. Compute both explicitly instead of picking a familiar percentage.</p>
+        </div>
+        <table class="compare mt-m">
+          <caption>Holdout options and their trade-offs</caption>
+          <thead>
+            <tr><th scope="col">Option</th><th scope="col">How it works</th><th scope="col">Trade-off</th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">Balanced user split (50/50)</th><td data-label="How it works">Half the eligible audience is held out.</td><td data-label="Trade-off">Smallest total N for a given MDE, since variance scales with 1/n<sub>test</sub> + 1/n<sub>control</sub>; half the audience is unexposed<sup class="cite"><a href="#ref-5">5</a></sup>.</td></tr>
+            <tr><th scope="row">Unequal user split (e.g. 90/10)</th><td data-label="How it works">Most of the audience stays eligible for ads.</td><td data-label="Trade-off">Less opportunity cost, but a much larger total N for the same MDE.</td></tr>
+            <tr><th scope="row">Platform lift cells</th><td data-label="How it works">Each Meta cell has a treatment and a control percentage that sum to 100; the treatment percentage is locked once the study starts<sup class="cite"><a href="#ref-23">23</a></sup>.</td><td data-label="Trade-off">Holdout guidance of "10–20%" appears only in third-party vendor blogs <span class="flag">not an official recommendation</span></td></tr>
+            <tr><th scope="row">Standard GeoLift</th><td data-label="How it works">Media runs in the test markets; the synthetic control is built from the rest.</td><td data-label="Trade-off">Often needs more than half of locations as controls<sup class="cite"><a href="#ref-20">20</a></sup>.</td></tr>
+            <tr><th scope="row">Inverse GeoLift (go-dark)</th><td data-label="How it works">Media is switched off only in the treated markets.</td><td data-label="Trade-off">Shrinks the holdout "without losing accuracy", assuming positive and negative effects are symmetric. Control geos with positive synthetic weights must actually receive the media, or the effect is diluted<sup class="cite"><a href="#ref-20">20</a></sup>.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Duration, pre-period, cooldown -->
+    <section class="section on-mist" aria-labelledby="timing">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="icon-badge"><span class="icon icon-calendar" aria-hidden="true"></span></span>
+          <p class="eyebrow">Step 6</p>
+          <h2 class="headline" id="timing" data-toc-label="Duration &amp; cooldown">Duration, pre-period and cooldown.</h2>
+          <p class="lede">Run long enough to cover a purchase cycle, collect enough clean history to model the counterfactual, and keep measuring after the media stops.</p>
+        </div>
+
+        <ul class="stats mt-m">
+          <li class="stat"><span class="stat-value">≥15 days</span><span class="stat-label">GeoLift minimum test length with daily data; 4–6 weeks with weekly data</span><span class="stat-note">GeoLift Best Practices<sup class="cite"><a href="#ref-25">25</a></sup></span></li>
+          <li class="stat"><span class="stat-value">3–5 wks</span><span class="stat-label">Typical test length in Google's geo-based regression examples</span><span class="stat-note">Google DS blog<sup class="cite"><a href="#ref-4">4</a></sup></span></li>
+          <li class="stat"><span class="stat-value">4–5×</span><span class="stat-label">Pre-period relative to test length, with at least 25 pre-treatment periods</span><span class="stat-note">GeoLift Best Practices<sup class="cite"><a href="#ref-25">25</a></sup></span></li>
+        </ul>
+
+        <div class="table-scroll mt-l" role="region" aria-label="Timing guidance by test type" tabindex="0">
+          <table class="compare compare-wide">
+            <caption>Timing guidance by test type</caption>
+            <thead>
+              <tr><th scope="col">Window</th><th scope="col">Geo tests</th><th scope="col">User-level tests</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">Test length</th><td>At least one full purchase cycle<sup class="cite"><a href="#ref-9">9</a></sup>. GeoLift: ≥15 days (daily data) or 4–6 weeks (weekly)<sup class="cite"><a href="#ref-25">25</a></sup>. Google GBR: typically 3–5 weeks<sup class="cite"><a href="#ref-4">4</a></sup>.</td><td>At least one full purchase cycle, in whole weeks to balance day-of-week effects. Platform lift tests typically run 2–6 weeks <span class="flag">unverified</span></td></tr>
+              <tr><th scope="row">Pre-period</th><td>GeoLift: "at least 4 - 5x the test duration", ≥25 periods, ideally 52 weeks for seasonality<sup class="cite"><a href="#ref-25">25</a></sup>. GBR examples: 4–8 weeks<sup class="cite"><a href="#ref-4">4</a></sup>. CausalImpact paper: about 1 year<sup class="cite"><a href="#ref-27">27</a></sup>. Avoid structural breaks; weight recent periods if history is long and unstable<sup class="cite"><a href="#ref-2">2</a></sup>.</td><td>Not needed for identification, but pre-period outcomes of the same users power CUPED<sup class="cite"><a href="#ref-10">10</a></sup> and balance checks. Typically 1–4 weeks <span class="flag">rule of thumb, unverified</span></td></tr>
+              <tr><th scope="row">Granularity</th><td>Daily preferred over weekly<sup class="cite"><a href="#ref-25">25</a></sup>.</td><td>Timestamped conversion events per user, ideally with impression logs to compute exposure rate.</td></tr>
+              <tr><th scope="row">Cooldown</th><td>Keep measuring after media stops: delayed and offline conversions "may well be delayed by days or even weeks"<sup class="cite"><a href="#ref-4">4</a></sup>.</td><td>Fix the conversion window before launch, long enough for the purchase cycle plus lagged effects and carry-over.</td></tr>
+              <tr><th scope="row">Anticipation</th><td>If behaviour changes before launch (pre-announcements), backdate the intervention date<sup class="cite"><a href="#ref-2">2</a></sup><sup class="cite"><a href="#ref-1">1</a></sup>.</td><td>Fix the start date in advance; on Meta, start time is locked once a study starts<sup class="cite"><a href="#ref-23">23</a></sup>.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="prose mt-m">
+          <div class="callout caveat">
+            <p class="callout-title"><span class="icon icon-warning" aria-hidden="true"></span>Caveat: lag guidance is thin</p>
+            <p>GeoLift has a blog post on lagged effects, but its specific recommendations were not verified for this guide. A ghost-ads "funnel and carry-over" meta-study exists, but its numbers were not verified either. Size the cooldown from your own purchase-cycle data.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Budget -->
+    <section class="section on-light" aria-labelledby="budget">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Step 6, continued</p>
+          <h2 class="headline" id="budget" data-toc-label="Budget">What the test costs.</h2>
+          <p class="lede">A test has two bills: the media needed to move the KPI past the MDE, and the revenue you give up in the holdout. Compute both before launch, and feed the budget into the power simulation as a design input<sup class="cite"><a href="#ref-9">9</a></sup>.</p>
+        </div>
+        <div class="tiles tiles-3 mt-m">
+          <article class="tile on-mist">
+            <div class="tile-copy">
+              <span class="icon-badge tile-icon"><span class="icon icon-target" aria-hidden="true"></span></span>
+              <h3 class="tile-title">Spend to reach the MDE</h3>
+              <p class="tile-desc">In a heavy-up, the incremental spend in treated geos must be large enough to reach the MDE. In a go-dark, the treated geos need enough <em>current</em> spend to withhold<sup class="cite"><a href="#ref-20">20</a></sup>. For user tests, expected incremental conversions must exceed the MDE, which Lewis &amp; Rao show can be prohibitive for low-margin, high-variance businesses<sup class="cite"><a href="#ref-8">8</a></sup>.</p>
+            </div>
+          </article>
+          <article class="tile on-mist">
+            <div class="tile-copy">
+              <span class="icon-badge tile-icon"><span class="icon icon-scale" aria-hidden="true"></span></span>
+              <h3 class="tile-title">Cost of the holdout</h3>
+              <p class="tile-desc">Go-dark tests forgo revenue, and standard GeoLifts often need more than half of locations in control, which is why inverse designs exist<sup class="cite"><a href="#ref-20">20</a></sup>. In user tests the cost is the unexposed control audience; unequal splits cut it but need more total sample.</p>
+            </div>
+          </article>
+          <article class="tile on-mist">
+            <div class="tile-copy">
+              <span class="icon-badge tile-icon"><span class="icon icon-split" aria-hidden="true"></span></span>
+              <h3 class="tile-title">Cost of the design</h3>
+              <p class="tile-desc">PSA designs pay for placebo impressions; ghost ads avoid that and cut experimentation cost<sup class="cite"><a href="#ref-3">3</a></sup>. Google's geography-based Conversion Lift "typically requires a higher budget" than the user-based type<sup class="cite"><a href="#ref-24">24</a></sup>.</p>
+            </div>
+          </article>
+        </div>
+        <div class="prose mt-m">
+          <p>In GeoLift, pass the <code>budget</code> and cost per incremental conversion (<code>cpic</code>) into the market-selection simulation to impose a budget constraint on the candidate designs<sup class="cite"><a href="#ref-9">9</a></sup>. Google's matched-markets search likewise restricts candidate designs to those that meet budget and geo-assignment constraints<sup class="cite"><a href="#ref-18">18</a></sup>.</p>
+          <div class="callout warning">
+            <p class="callout-title"><span class="icon icon-warning" aria-hidden="true"></span>Budget reality check</p>
+            <p>Lewis &amp; Rao's 25 experiments spent about $2.8M in total and still produced a median ROI interval more than 100 percentage points wide<sup class="cite"><a href="#ref-8">8</a></sup>. If the affordable design cannot reach the break-even MDE, change the design (bigger contrast, ghost ads, a better KPI) or do not run the test.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contamination -->
+    <section class="section on-mist" aria-labelledby="contamination">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="icon-badge"><span class="icon icon-shield" aria-hidden="true"></span></span>
+          <p class="eyebrow">Step 7</p>
+          <h2 class="headline" id="contamination" data-toc-label="Contamination">Keep the control group clean.</h2>
+          <p class="lede">When leakage adds exposure to the control group, or spillover benefits it, the estimate is pulled toward zero, so a leaky test tends to understate the effect.</p>
+        </div>
+        <div class="tiles mt-m">
+          <article class="tile on-light">
+            <div class="tile-copy">
+              <span class="icon-badge tile-icon"><span class="icon icon-geo-pin" aria-hidden="true"></span></span>
+              <h3 class="tile-title">Geo tests</h3>
+              <div class="prose">
+                <ul>
+                  <li>Use commuting zones or other coarser units, which GeoLift supports to "take the commuter effect into account"<sup class="cite"><a href="#ref-28">28</a></sup>, or drop <strong>buffer geos</strong> along treated borders from the donor pool<sup class="cite"><a href="#ref-2">2</a></sup>.</li>
+                  <li>Freeze other media, pricing and promotions in test and control, or log them as covariates<sup class="cite"><a href="#ref-25">25</a></sup>.</li>
+                  <li>Measure total business, not just the channel's own KPI: when eBay turned off brand-keyword paid search in 68 DMAs for 60 days, almost all of the lost traffic moved to organic search<sup class="cite"><a href="#ref-29">29</a></sup>.</li>
+                  <li>Digital geo-targeting relies on IP location, which is noisy <span class="flag">practitioner heuristic</span></li>
+                </ul>
+              </div>
+            </div>
+          </article>
+          <article class="tile on-light">
+            <div class="tile-copy">
+              <span class="icon-badge tile-icon"><span class="icon icon-user" aria-hidden="true"></span></span>
+              <h3 class="tile-title">User-level tests</h3>
+              <div class="prose">
+                <ul>
+                  <li>Assign at the person or household level where possible; treat cookie-level results as lower bounds.</li>
+                  <li>Exclude control users from retargeting pools seeded by test-group behaviour.</li>
+                  <li>Freeze other campaigns' targeting changes and coordinate with other teams testing on the same audience.</li>
+                  <li>When word of mouth or shared devices make spillovers likely, SUTVA is violated; geo randomization is the usual remedy.</li>
+                </ul>
+              </div>
+            </div>
+          </article>
+        </div>
+        <div class="prose mt-m">
+          <div class="callout note">
+            <p class="callout-title">Why contamination gives a lower bound</p>
+            <p>When spillover cannot be removed, synthetic-control estimates are biased toward zero; if the treatment benefits donors, the estimate is a <strong>lower bound</strong> on the effect<sup class="cite"><a href="#ref-2">2</a></sup>. Cross-device leakage in user tests biases lift toward zero in the same way, under the usual assumption that contamination only adds exposure to the control group.</p>
+          </div>
+          <div class="callout caveat">
+            <p class="callout-title"><span class="icon icon-warning" aria-hidden="true"></span>Caveat</p>
+            <p>Border-spillover mechanisms (TV and radio signals crossing DMA lines, IP geolocation error, shipping addresses that differ from where the ad was seen) are practitioner knowledge, not drawn from a cited source. The link between commuting zones and spillover is an inference from GeoLift's commuter-effect documentation.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Launch QA -->
+    <section class="section on-light" aria-labelledby="launch">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">In-flight</p>
+          <h2 class="headline" id="launch" data-toc-label="Launch QA">Launch QA, then hands off.</h2>
+          <p class="lede">An assignment or logging bug can invalidate a test before any statistics run. Check the plumbing in the first days, then stop looking at the result until the analysis date.</p>
+        </div>
+        <div class="split mt-m">
+          <div>
+            <h3 class="title-s">Launch checks</h3>
+            <ul class="checklist mt-s">
+              <li><strong>Sample ratio mismatch</strong><span class="muted">A chi-square test on realized test/control counts against the design. A mismatch usually signals an assignment or logging bug, not a treatment effect.</span></li>
+              <li><strong>Covariate balance</strong><span class="muted">Compare pre-period outcomes and covariates across arms<sup class="cite"><a href="#ref-30">30</a></sup>.</span></li>
+              <li><strong>Control really unexposed</strong><span class="muted">Control users never enter the auction; in Inverse GeoLift, control geos with positive weights actually receive the media<sup class="cite"><a href="#ref-20">20</a></sup>.</span></li>
+              <li><strong>Exposure logging works</strong><span class="muted">You will need the exposure rate to interpret ITT.</span></li>
+              <li><strong>Spend lands where planned</strong><span class="muted">Planned and actual spend per geo per period, needed for iROAS<sup class="cite"><a href="#ref-4">4</a></sup>.</span></li>
+              <li><strong>Concurrent-activity log started</strong><span class="muted">Other campaigns, local media, pricing and distribution changes per geo<sup class="cite"><a href="#ref-25">25</a></sup>.</span></li>
+            </ul>
+          </div>
+          <div class="prose">
+            <h3>Monitor health, not lift</h3>
+            <p>During the flight, watch pacing, delivery, the sample ratio and data feeds. Do not watch the lift estimate with a decision in mind.</p>
+            <div class="callout danger">
+              <p class="callout-title">Pitfall: peeking</p>
+              <p>Stopping when the dashboard turns significant inflates false positives, and short tests miss lagged conversions and over-weight novelty effects. Fix the duration and the analysis date in advance.</p>
+            </div>
+            <p>Some platforms enforce this for you: Meta locks a lift study's start time and treatment percentage once it starts<sup class="cite"><a href="#ref-23">23</a></sup>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Analysis plan -->
+    <section class="section on-mist" aria-labelledby="analysis">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Post</p>
+          <h2 class="headline" id="analysis" data-toc-label="Analysis plan">Analyze exactly what you planned.</h2>
+          <p class="lede">The estimator, inference method and diagnostics belong in the pre-registration. Here is what to write down for each design.</p>
+        </div>
+        <table class="compare mt-m">
+          <caption>Estimator and inference by design</caption>
+          <thead>
+            <tr><th scope="col">Design</th><th scope="col">Estimator</th><th scope="col">Inference</th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">User-level RCT</th><td data-label="Estimator">Difference in means (ITT); TOT = ITT ÷ exposure rate. CUPED or regression adjustment for precision, not bias<sup class="cite"><a href="#ref-10">10</a></sup><sup class="cite"><a href="#ref-11">11</a></sup>.</td><td data-label="Inference">Confidence interval on lift and iROAS; multiplicity correction for extra cells, KPIs and segments<sup class="cite"><a href="#ref-14">14</a></sup>.</td></tr>
+            <tr><th scope="row">Randomized geo (≈30+ geos)</th><td data-label="Estimator">Geo-based regression weighted by 1/pre-period volume; combine the smallest geos<sup class="cite"><a href="#ref-4">4</a></sup>. Trimmed Match for paired designs<sup class="cite"><a href="#ref-16">16</a></sup>.</td><td data-label="Inference">Regression CIs; robust iROAS intervals for Trimmed Match.</td></tr>
+            <tr><th scope="row">Few geos / matched markets</th><td data-label="Estimator">Time-based regression<sup class="cite"><a href="#ref-17">17</a></sup>, or synthetic control / augmented SC (GeoLift)<sup class="cite"><a href="#ref-9">9</a></sup>.</td><td data-label="Inference">Placebo/permutation on the post/pre RMSPE ratio<sup class="cite"><a href="#ref-1">1</a></sup>; conformal inference in GeoLift <span class="flag">secondary docs</span>.</td></tr>
+            <tr><th scope="row">Staggered rollout</th><td data-label="Estimator">Callaway–Sant'Anna group-time effects, aggregated to event-study or overall summaries<sup class="cite"><a href="#ref-21">21</a></sup>.</td><td data-label="Inference">Multiplier bootstrap for uniform bands<sup class="cite"><a href="#ref-21">21</a></sup>.</td></tr>
+            <tr><th scope="row">Non-randomized intervention</th><td data-label="Estimator">CausalImpact / Bayesian structural time series<sup class="cite"><a href="#ref-27">27</a></sup>.</td><td data-label="Inference">Posterior credible intervals for pointwise and cumulative effects.</td></tr>
+          </tbody>
+        </table>
+
+        <h3 class="subhead mt-l">Diagnostics to pre-specify</h3>
+        <div class="mt-m">
+          <details class="accordion">
+            <summary>Pre-period fit</summary>
+            <div class="accordion-body"><p>Plot the synthetic series against the treated series and report pre-period RMSPE<sup class="cite"><a href="#ref-1">1</a></sup>. GeoLift reports a scaled L2 imbalance from 0 (perfect fit) to 1 (no better than a simple average of controls)<sup class="cite"><a href="#ref-9">9</a></sup>.</p></div>
+          </details>
+          <details class="accordion">
+            <summary>Backdating (in-time placebo)</summary>
+            <div class="accordion-body"><p>Pretend the test started earlier. A credible model shows roughly zero "effect" in the backdated window<sup class="cite"><a href="#ref-1">1</a></sup>.</p></div>
+          </details>
+          <details class="accordion">
+            <summary>Leave-one-out</summary>
+            <div class="accordion-body"><p>Drop each donor or geo in turn. The estimate should not depend on a single geo<sup class="cite"><a href="#ref-1">1</a></sup><sup class="cite"><a href="#ref-4">4</a></sup>.</p></div>
+          </details>
+          <details class="accordion">
+            <summary>Placebo geos</summary>
+            <div class="accordion-body"><p>Run the analysis on untreated geos and expect a null. In the CausalImpact paper's geo experiment, the placebo on untreated DMAs gave 2% [−6%, 10%]<sup class="cite"><a href="#ref-27">27</a></sup>.</p></div>
+          </details>
+          <details class="accordion">
+            <summary>Balance and sample ratio (user tests)</summary>
+            <div class="accordion-body"><p>Repeat the launch checks on the final data, and report the exposure rate next to the lift<sup class="cite"><a href="#ref-30">30</a></sup>.</p></div>
+          </details>
+        </div>
+
+        <div class="proscons mt-l">
+          <div class="proscons-col">
+            <h3>Do</h3>
+            <ul class="list-pro">
+              <li>Report the interval, not just the p-value; a non-significant result is usually underpowered, not proof of zero<sup class="cite"><a href="#ref-8">8</a></sup>.</li>
+              <li>Report ITT as primary and TOT as ITT ÷ exposure rate.</li>
+              <li>Label unplanned segments as exploratory.</li>
+            </ul>
+          </div>
+          <div class="proscons-col">
+            <h3>Don't</h3>
+            <ul class="list-con">
+              <li>Compute TOT by comparing exposed test users with all control users: that reintroduces selection.</li>
+              <li>Use plain two-way fixed effects on a staggered rollout<sup class="cite"><a href="#ref-22">22</a></sup>.</li>
+              <li>Prefer an estimator because its interval is narrower. In the CausalImpact geo example, its 95% interval (13–30%) was wider than classical regression's (19–22%) with point estimates within 5%<sup class="cite"><a href="#ref-27">27</a></sup>.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="prose mt-m">
+          <div class="callout caveat">
+            <p class="callout-title"><span class="icon icon-warning" aria-hidden="true"></span>Caveat: check aggregation choices</p>
+            <p>A third-party replication reported that GeoLift's conformal p-value changes when treated outcomes are summed rather than averaged (p ≈ 0.68 vs ≈ 0.01) <span class="flag">unverified</span>. It has not been checked against Meta's own documentation; pre-register the aggregation. GeoLift's default use of conformal inference also comes from secondary documentation pages.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Statement -->
+    <section class="statement on-dark" aria-label="Key idea">
+      <div class="wrap">
+        <figure>
+          <blockquote>A non-significant lift is usually an underpowered test, not proof of zero effect.</blockquote>
+          <figcaption>Report the interval. In Lewis &amp; Rao's 25 large ad experiments, the median ROI interval was more than 100 percentage points wide. <a href="https://doi.org/10.1093/qje/qjv023">Lewis &amp; Rao (2015)</a></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- Readout & MMM -->
+    <section class="section on-light" aria-labelledby="readout">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Post</p>
+          <h2 class="headline" id="readout" data-toc-label="Readout &amp; MMM">Read out, then feed the model.</h2>
+          <p class="lede">A test is one unbiased, local measurement of one channel. That is often exactly the information a media mix model lacks, so feed it back into the model that allocates the whole budget<sup class="cite"><a href="#ref-31">31</a></sup>. See <a href="other-methods.html#mmm">Other methods</a>.</p>
+        </div>
+        <div class="split mt-m">
+          <div class="prose">
+            <h3>What the readout contains</h3>
+            <ul>
+              <li>The point estimate and interval for the pre-registered KPI and estimand.</li>
+              <li>iROAS, and for user tests the exposure rate.</li>
+              <li>The decision rule and whether it was met.</li>
+              <li>Diagnostics, deviations from the plan, and exploratory findings labelled as such.</li>
+              <li>Scope: the population, period and spend level the result applies to. Geo results are average effects for the treated geos; carrying them to other markets or spend levels is an assumption.</li>
+            </ul>
+            <h3>Three ways to calibrate an MMM</h3>
+            <ul>
+              <li><strong>As priors (Meridian).</strong> An experiment's ROI estimate and standard error become an ROI prior; <code>CalibrationBuilder</code> adjusts for spend, recency and duration<sup class="cite"><a href="#ref-31">31</a></sup><sup class="cite"><a href="#ref-32">32</a></sup>.</li>
+              <li><strong>As an extra likelihood (PyMC-Marketing).</strong> Each test is an extra observation of the saturation curve: f(x + Δx) − f(x) must match the measured lift within its standard error<sup class="cite"><a href="#ref-33">33</a></sup>.</li>
+              <li><strong>As a selection objective (Robyn).</strong> MAPE.LIFT penalizes models whose decomposed contribution over the test window differs from the experiment<sup class="cite"><a href="#ref-34">34</a></sup>.</li>
+            </ul>
+          </div>
+          <div class="prose">
+            <div class="callout caveat">
+              <p class="callout-title"><span class="icon icon-warning" aria-hidden="true"></span>Match the estimand</p>
+              <p>MMM ROI uses a zero-spend counterfactual. Many experiments measure marginal lift or lift against business-as-usual, and translating between them adds uncertainty beyond the experiment's standard error. Check each test's recency, duration, granularity, population and complexity<sup class="cite"><a href="#ref-31">31</a></sup>. A platform conversion-lift test measures that platform's audience and window, not total-business offline sales <span class="flag">practitioner heuristic</span>. Calibration is also more complex for inverse (go-dark) designs<sup class="cite"><a href="#ref-20">20</a></sup>.</p>
+            </div>
+            <div class="callout note">
+              <p class="callout-title">Calibrate as evidence, not as a constraint</p>
+              <p>Some practitioners argue that injecting experiment results can distort other MMM parameters. Treat calibration as Bayesian evidence with honest uncertainty <span class="flag">vendor opinion, not peer-reviewed</span></p>
+            </div>
+            <h3>Choose the next test with the model</h3>
+            <p>Prioritize channels with large spend, wide MMM posteriors or implausible ROI; Meridian's channel-calibration score flags them<sup class="cite"><a href="#ref-35">35</a></sup>. Run tests at the spend levels the MMM will extrapolate to, and refresh them as effects drift <span class="flag">practitioner heuristic</span></p>
+          </div>
+        </div>
+
+        <h3 class="subhead mt-l">The operating loop</h3>
+        <ol class="steps mt-m">
+          <li><h3>MMM flags a channel</h3><p>High spend, wide posterior or implausible ROI<sup class="cite"><a href="#ref-35">35</a></sup>.</p></li>
+          <li><h3>Design a test</h3><p>Geo or user-level, planned with this page.</p></li>
+          <li><h3>Feed the lift back</h3><p>As a prior, a likelihood term or a calibration objective.</p></li>
+          <li><h3>Re-optimize the budget</h3><p>On marginal ROAS, inside the observed spend range <span class="flag">practitioner heuristic</span></p></li>
+          <li><h3>Rescale attribution</h3><p>Experiment-derived incrementality factors for in-flight tactics <span class="flag">practitioner heuristic</span></p></li>
+          <li><h3>Repeat</h3><p>Effects drift, so tests need refreshing.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- Printable checklist -->
+    <section class="section on-mist" aria-labelledby="checklist">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="icon-badge"><span class="icon icon-checklist" aria-hidden="true"></span></span>
+          <p class="eyebrow">Print me</p>
+          <h2 class="headline" id="checklist" data-toc-label="Checklist">The planning checklist.</h2>
+          <p class="lede">Every item from this page in one list. Print the page from your browser; navigation and the table of contents are hidden in print.</p>
+        </div>
+
+        <h3 class="title-s mt-m">Pre-test</h3>
+        <ul class="checklist checklist-2 mt-s">
+          <li><strong>Decision the test feeds</strong><span class="muted">Written in one sentence</span></li>
+          <li><strong>Primary KPI</strong><span class="muted">Closest business outcome; proxies validated</span></li>
+          <li><strong>Estimand</strong><span class="muted">iROAS, lift % or incremental conversions; ITT vs TOT</span></li>
+          <li><strong>Sidedness and α</strong></li>
+          <li><strong>MDE from break-even economics</strong></li>
+          <li><strong>Power by formula or simulation</strong><span class="muted">ITT effect = TOT × exposure rate</span></li>
+          <li><strong>Type S / Type M design calculation</strong></li>
+          <li><strong>Multiplicity plan</strong><span class="muted">Confirmatory vs exploratory KPIs, cells, segments</span></li>
+          <li><strong>Design and estimator chosen</strong></li>
+          <li><strong>Markets or audiences selected</strong><span class="muted">Algorithmic matching; no dominant or contaminated geos</span></li>
+          <li><strong>Holdout size</strong><span class="muted">Power and opportunity cost both computed</span></li>
+          <li><strong>Test length, pre-period, cooldown</strong></li>
+          <li><strong>Budget confirmed</strong><span class="muted">Spend contrast reaches the MDE</span></li>
+          <li><strong>Contamination controls</strong><span class="muted">Buffers, frozen media, retargeting exclusions</span></li>
+          <li><strong>Pre-registration timestamped</strong></li>
+        </ul>
+
+        <h3 class="title-s mt-l">In-flight</h3>
+        <ul class="checklist checklist-2 mt-s">
+          <li><strong>Sample ratio check passed</strong></li>
+          <li><strong>Covariate balance checked</strong></li>
+          <li><strong>Control unexposed; exposure logged</strong></li>
+          <li><strong>Spend and delivery as planned</strong></li>
+          <li><strong>Concurrent-activity log kept</strong></li>
+          <li><strong>No early stopping on results</strong></li>
+        </ul>
+
+        <h3 class="title-s mt-l">Post</h3>
+        <ul class="checklist checklist-2 mt-s">
+          <li><strong>Cooldown completed</strong></li>
+          <li><strong>Pre-registered estimator run</strong></li>
+          <li><strong>Diagnostics</strong><span class="muted">Pre-fit, backdating, leave-one-out, placebo</span></li>
+          <li><strong>Interval reported, not just p-value</strong></li>
+          <li><strong>Decision rule applied</strong></li>
+          <li><strong>Estimand matched before MMM calibration</strong></li>
+          <li><strong>Result logged for the next test</strong></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Sources -->
+    <section class="section on-light" aria-labelledby="sources">
+      <div class="wrap">
+        <div class="section-head">
+          <h2 class="headline" id="sources">Sources &amp; further reading</h2>
+          <p class="lede">The author's notes are on the <a href="https://redam94.github.io/second-brain/">second brain</a>. The full bibliography is on the <a href="sources.html">Sources</a> page.</p>
+        </div>
+        <ol class="refs mt-m">
+          <li id="ref-1"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Econometrics/Identification-Strategies/Synthetic-Control-Inference-and-Diagnostics">Synthetic Control Inference and Diagnostics</a> <span class="ref-meta">Author's notes</span><span class="ref-supports">One-sided tests, RMSPE ratio, permutation inference, backdating, leave-one-out.</span></li>
+          <li id="ref-2"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Econometrics/Identification-Strategies/Synthetic-Control-Requirements">Synthetic Control Requirements</a> <span class="ref-meta">Author's notes, summarizing Abadie (2021)</span><span class="ref-supports">Effect size vs volatility, KPI choice, pre-period stability, donor pool, fewer than about 5 donors, convex hull, spillover lower bound, anticipation, pre-registration.</span></li>
+          <li id="ref-3"><a class="ref-title" href="https://conference.nber.org/conf_papers/f84173.pdf">Ghost Ads: Improving the Economics of Measuring Online Ad Effectiveness</a> <span class="ref-meta">Johnson, Lewis &amp; Nubbemeyer, NBER conference paper; published in Journal of Marketing Research 54(6), 2017</span><span class="ref-supports">ITT dilution, ghost ads vs PSA and ITT, order-of-magnitude cost savings, PSA bias, randomizing before the auction.</span></li>
+          <li id="ref-4"><a class="ref-title" href="https://www.unofficialgoogledatascience.com/2016/06/estimating-causal-effects-using-geo.html">Estimating causal effects using geo experiments</a> <span class="ref-meta">Unofficial Google Data Science blog (2016)</span><span class="ref-supports">GBR and iROAS, 30+ geos, stratification, London/Paris dominance, CI half-width targets, spend contrast, 4–8 week pre-period, 3–5 week tests, cooldown, leave-one-out.</span></li>
+          <li id="ref-5"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Research-Methodology/Experimental-Design/Power-Analysis-and-Sample-Size">Power Analysis and Sample Size</a> <span class="ref-meta">Author's notes</span><span class="ref-supports">α, β, MDE; two-means and two-proportions formulas; attrition adjustment.</span></li>
+          <li id="ref-6"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Research-Methodology/Garden-of-Forking-Paths">Garden of Forking Paths</a> <span class="ref-meta">Author's notes</span><span class="ref-supports">Data-contingent analysis inflates false positives; motivates pre-registration.</span></li>
+          <li id="ref-7"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Research-Methodology/Researcher-Degrees-of-Freedom">Researcher Degrees of Freedom</a> <span class="ref-meta">Author's notes</span><span class="ref-supports">Analytic flexibility and pre-specification.</span></li>
+          <li id="ref-8"><a class="ref-title" href="https://doi.org/10.1093/qje/qjv023">The Unfavorable Economics of Measuring the Returns to Advertising</a> <span class="ref-meta">Lewis &amp; Rao (2015), Quarterly Journal of Economics 130(4)</span><span class="ref-supports">25 experiments, about $2.8M, CV ≈ 10, more than 10M person-weeks, median ROI CI over 100 pp wide.</span></li>
+          <li id="ref-9"><a class="ref-title" href="https://facebookincubator.github.io/GeoLift/docs/GettingStarted/Walkthrough">GeoLift Walkthrough</a> <span class="ref-meta">Meta</span><span class="ref-supports">Market-selection power simulation, budget and cpic, purchase-cycle duration, data schema, scaled L2 imbalance, ASCM.</span></li>
+          <li id="ref-10"><a class="ref-title" href="https://exp-platform.com/cuped/">Improving the Sensitivity of Online Controlled Experiments by Utilizing Pre-Experiment Data (CUPED)</a> <span class="ref-meta">Deng, Xu, Kohavi &amp; Walker (2013), WSDM</span><span class="ref-supports">Pre-experiment covariates reduce variance; the covariate must be unaffected by treatment.</span></li>
+          <li id="ref-11"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Research-Methodology/Logic-of-Regression-Adjustment">Logic of Regression Adjustment</a> <span class="ref-meta">Author's notes</span><span class="ref-supports">Covariate adjustment for precision under randomization.</span></li>
+          <li id="ref-12"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Research-Methodology/Experimental-Design/Type-S-and-Type-M-Errors">Type S and Type M Errors</a> <span class="ref-meta">Author's notes</span><span class="ref-supports">Definitions; large standard errors inflate Type M; multilevel models reduce S/M errors; the ≈220× illustration.</span></li>
+          <li id="ref-13"><a class="ref-title" href="https://sites.stat.columbia.edu/gelman/research/published/PPS551642_REV2.pdf">Beyond Power Calculations: Assessing Type S and Type M Errors</a> <span class="ref-meta">Gelman &amp; Carlin (2014), Perspectives on Psychological Science 9(6)</span><span class="ref-supports">Design calculations from realistic external effect sizes.</span></li>
+          <li id="ref-14"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Research-Methodology/Experimental-Design/Multiple-Testing-Corrections">Multiple Testing Corrections</a> <span class="ref-meta">Author's notes</span><span class="ref-supports">1 − (1 − α)<sup>m</sup>; Bonferroni, Holm, Benjamini–Hochberg.</span></li>
+          <li id="ref-15"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Bayesian-Statistics/Inference-Fundamentals/Partial-Pooling-as-Multiple-Comparisons-Correction">Partial Pooling as Multiple Comparisons Correction</a> <span class="ref-meta">Author's notes</span><span class="ref-supports">Hierarchical shrinkage as an alternative to classical corrections.</span></li>
+          <li id="ref-16"><a class="ref-title" href="https://github.com/google/trimmed_match">google/trimmed_match</a> <span class="ref-meta">Google, GitHub</span><span class="ref-supports">Paired randomized geo designs and robust iROAS.</span></li>
+          <li id="ref-17"><a class="ref-title" href="https://research.google/pubs/estimating-ad-effectiveness-using-geo-experiments-in-a-time-based-regression-framework/">Estimating Ad Effectiveness using Geo Experiments in a Time-Based Regression Framework</a> <span class="ref-meta">Kerman, Wang &amp; Vaver (2017), Google Research</span><span class="ref-supports">TBR for few geos, down to one vs one.</span></li>
+          <li id="ref-18"><a class="ref-title" href="https://github.com/google/matched_markets">google/matched_markets</a> <span class="ref-meta">Google, GitHub</span><span class="ref-supports">TBR matched-markets design search under budget and geo-assignment constraints.</span></li>
+          <li id="ref-19"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Econometrics/Identification-Strategies/Generalized-Synthetic-Control-Method">Generalized Synthetic Control Method</a> <span class="ref-meta">Author's notes, on Xu (2017)</span><span class="ref-supports">GSC needs a large control pool and a long pre-period.</span></li>
+          <li id="ref-20"><a class="ref-title" href="https://facebookincubator.github.io/GeoLift/blog/inverse-geolift">Inverse GeoLift</a> <span class="ref-meta">GeoLift blog, Meta</span><span class="ref-supports">Go-dark design, holdout sizing, opportunity cost, budget for go-dark, MMM calibration caveat.</span></li>
+          <li id="ref-21"><a class="ref-title" href="https://doi.org/10.1016/j.jeconom.2020.12.001">Difference-in-Differences with multiple time periods</a> <span class="ref-meta">Callaway &amp; Sant'Anna (2021), Journal of Econometrics</span><span class="ref-supports">Staggered DiD, group-time effects, aggregation, multiplier bootstrap.</span></li>
+          <li id="ref-22"><a class="ref-title" href="https://doi.org/10.1016/j.jeconom.2021.03.014">Difference-in-differences with variation in treatment timing</a> <span class="ref-meta">Goodman-Bacon (2021), Journal of Econometrics</span><span class="ref-supports">Negative weights in two-way fixed effects.</span></li>
+          <li id="ref-23"><a class="ref-title" href="https://developers.facebook.com/docs/marketing-api/guides/lift-studies">Lift Study guide</a> <span class="ref-meta">Meta Marketing API</span><span class="ref-supports">Randomization of Accounts Center accounts, cells with treatment and control percentages, start time and treatment percentage locked after start.</span></li>
+          <li id="ref-24"><a class="ref-title" href="https://support.google.com/google-ads/answer/14097991">Comparing lift types</a> <span class="ref-meta">Google Ads Help</span><span class="ref-supports">Geography-based Conversion Lift supports offline data and typically needs a higher budget. See also <a href="https://support.google.com/google-ads/answer/12003020">About Conversion Lift</a>.</span></li>
+          <li id="ref-25"><a class="ref-title" href="https://facebookincubator.github.io/GeoLift/docs/Best%20Practices/BestPractices">GeoLift Best Practices</a> <span class="ref-meta">Meta</span><span class="ref-supports">Pre-period 4–5× test length, ≥25 periods, ≥20 geos, 52 weeks of history, daily data, ≥15 days or 4–6 weeks, holding other media constant.</span></li>
+          <li id="ref-26"><a class="ref-title" href="https://developer.apple.com/app-store/user-privacy-and-data-use/">User Privacy and Data Use</a> <span class="ref-meta">Apple Developer</span><span class="ref-supports">App Tracking Transparency permission is required to track users or access the advertising identifier.</span></li>
+          <li id="ref-27"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Bayesian-Statistics/Causal-Inference/Time-Series-Causal-Inference/CausalImpact-Empirical-Application">CausalImpact Empirical Application</a> <span class="ref-meta">Author's notes, on Brodersen et al. (2015)</span><span class="ref-supports">About 1 year of pre-period, placebo 2% [−6%, 10%], interval comparison with classical regression.</span></li>
+          <li id="ref-28"><a class="ref-title" href="https://facebookincubator.github.io/GeoLift/docs/GettingStarted/Incorporating_CommutingZones">Incorporating Commuting Zones</a> <span class="ref-meta">GeoLift docs, Meta</span><span class="ref-supports">Commuting zones account for the commuter effect.</span><span class="ref-caveat"><span class="flag">inference</span>The spillover link is the brief author's inference.</span></li>
+          <li id="ref-29"><a class="ref-title" href="https://doi.org/10.3982/ECTA12423">Consumer Heterogeneity and Paid Search Effectiveness</a> <span class="ref-meta">Blake, Nosko &amp; Tadelis (2015), Econometrica</span><span class="ref-supports">eBay go-dark test; traffic substituted to organic search.</span></li>
+          <li id="ref-30"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Econometrics/Foundations/The-Experimental-Ideal">The Experimental Ideal</a> <span class="ref-meta">Author's notes</span><span class="ref-supports">Randomization removes selection bias; balance checks (STAR example).</span></li>
+          <li id="ref-31"><a class="ref-title" href="https://developers.google.com/meridian/docs/advanced-modeling/roi-priors-and-calibration">ROI priors and calibration</a> <span class="ref-meta">Google Meridian docs</span><span class="ref-supports">Experiments as ROI priors; estimand mismatch between zero-spend and marginal lift.</span></li>
+          <li id="ref-32"><a class="ref-title" href="https://developers.google.com/meridian/docs/advanced-modeling/set-custom-priors-past-experiments">Set custom ROI priors using past experiments</a> <span class="ref-meta">Google Meridian docs</span><span class="ref-supports">CalibrationBuilder adjustments for spend, recency and duration.</span></li>
+          <li id="ref-33"><a class="ref-title" href="https://www.pymc-marketing.io/en/stable/notebooks/mmm/mmm_lift_test.html">Lift test calibration</a> <span class="ref-meta">PyMC-Marketing</span><span class="ref-supports">Lift tests as extra likelihood terms on the saturation curve.</span></li>
+          <li id="ref-34"><a class="ref-title" href="https://facebookexperimental.github.io/Robyn/docs/features">Robyn features</a> <span class="ref-meta">Meta Robyn</span><span class="ref-supports">MAPE.LIFT calibration objective.</span></li>
+          <li id="ref-35"><a class="ref-title" href="https://developers.google.com/meridian/docs/post-modeling/channel-recommendation">Channel calibration recommendation and score</a> <span class="ref-meta">Google Meridian docs</span><span class="ref-supports">Which channels to test next.</span></li>
+        </ol>
+      </div>
+    </section>
+  </main>
+
+
+  <footer class="footer on-dark">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <p class="footer-brand">Geo vs User-Level Testing</p>
+          <p class="footer-about">A practitioner guide to media incrementality testing and the measurement methods around it, built on the author's <a href="https://redam94.github.io/second-brain/">second-brain notes</a>.</p>
+        </div>
+        <div>
+          <h2>Guide</h2>
+          <ul>
+            <li><a href="index.html">Overview</a></li>
+            <li><a href="geo-testing.html">Geo testing</a></li>
+            <li><a href="user-level-testing.html">User-level testing</a></li>
+            <li><a href="compare.html">Compare</a></li>
+            <li><a href="planning.html">Planning</a></li>
+            <li><a href="other-methods.html">Other methods</a></li>
+            <li><a href="sources.html">Sources</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>From the notes</h2>
+          <ul>
+            <li><a href="https://redam94.github.io/second-brain/Research/Econometrics/Foundations/The-Experimental-Ideal">The Experimental Ideal</a></li>
+            <li><a href="https://redam94.github.io/second-brain/Research/Econometrics/Identification-Strategies/Synthetic-Control-Requirements">Synthetic Control Requirements</a></li>
+            <li><a href="https://redam94.github.io/second-brain/Research/Research-Methodology/Experimental-Design/Power-Analysis-and-Sample-Size">Power Analysis and Sample Size</a></li>
+            <li><a href="https://redam94.github.io/second-brain/Research/Market-Response-Models/Bayesian-Media-Mix-Modeling/Bayesian-Media-Mix-Modeling---Overview">Bayesian Media Mix Modeling</a></li>
+            <li><a href="https://redam94.github.io/second-brain/">Second brain home</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-base">
+        <p>Illustrations and icons generated with fal. Sources are cited inline on every page.</p>
+        <p><a href="https://redam94.github.io/">redam94.github.io</a></p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,6 @@
+<svg viewBox="0 0 816 816" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+  <g id="person" fill="none" stroke="#606d3d" stroke-width="44" stroke-linecap="round" stroke-linejoin="round">
+    <circle id="head" cx="408" cy="290" r="196" />
+    <path id="shoulders" d="M366 486H450C571 486 669 568 682 677C685 702 668 722 642 722H174C148 722 131 702 134 677C147 568 245 486 366 486Z" />
+  </g>
+</svg>

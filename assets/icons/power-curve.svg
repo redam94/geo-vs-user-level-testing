@@ -1,0 +1,6 @@
+<svg viewBox="0 0 816 816" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+  <g id="chart" fill="none" stroke="#606d3d" stroke-width="44" stroke-linecap="round" stroke-linejoin="round">
+    <path id="axes" d="M94 130V685H722" />
+    <path id="power-curve" d="M114 645C268 635 350 567 397 410S477 182 676 182H722" />
+  </g>
+</svg>

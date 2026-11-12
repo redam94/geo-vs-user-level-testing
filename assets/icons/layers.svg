@@ -1,0 +1,7 @@
+<svg width="64" height="64" viewBox="0 0 816 816" xmlns="http://www.w3.org/2000/svg">
+  <g id="stacked-layers" fill="none" stroke="#606d3d" stroke-width="44" stroke-linecap="round" stroke-linejoin="round">
+    <path id="bottom-layer" d="M212 477 L89 537 Q72 546 89 555 L397 704 Q408 709 419 704 L727 555 Q744 546 727 537 L604 477" />
+    <path id="middle-layer" d="M212 335 L89 396 Q72 405 89 414 L397 563 Q408 568 419 563 L727 414 Q744 405 727 396 L604 335" />
+    <path id="top-layer" d="M397 106 Q408 101 419 106 L727 255 Q744 264 727 273 L419 422 Q408 427 397 422 L89 273 Q72 264 89 255 Z" />
+  </g>
+</svg>

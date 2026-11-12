@@ -1,0 +1,6 @@
+<svg viewBox="0 0 816 816" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+  <g id="privacy-icon" fill="none" stroke="#606d3d" stroke-width="44" stroke-linecap="round" stroke-linejoin="round">
+    <path id="shield" d="M393 98 Q408 88 423 98 C490 144 559 180 632 205 Q662 214 662 246 V375 C662 531 581 629 423 712 Q408 720 393 712 C235 629 154 531 154 375 V246 Q154 214 184 205 C257 180 326 144 393 98 Z" />
+    <path id="checkmark" d="M299 423 L369 489 L534 331" />
+  </g>
+</svg>

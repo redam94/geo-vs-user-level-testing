@@ -1,0 +1,8 @@
+<svg viewBox="0 0 816 816" fill="none" xmlns="http://www.w3.org/2000/svg" width="64" height="64">
+  <g id="split-arrow" stroke="#606d3d" stroke-width="44" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M104 408H216C384 408 368 232 544 232H712" />
+    <path d="M216 408C384 408 368 584 544 584H712" />
+    <path d="M608 144L712 232L608 320" />
+    <path d="M608 496L712 584L608 672" />
+  </g>
+</svg>

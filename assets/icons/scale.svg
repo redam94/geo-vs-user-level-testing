@@ -1,0 +1,16 @@
+<svg viewBox="0 0 816 816" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+  <g id="balance-scale" fill="none" stroke="#606d3d" stroke-width="44" stroke-linecap="round" stroke-linejoin="round">
+    <circle id="pivot" cx="408" cy="196" r="49" />
+    <path id="beam" d="M174 198H359M457 198H642" />
+    <path id="upright" d="M408 245V624" />
+    <g id="left-pan">
+      <path d="M56 420L182 198L308 420" />
+      <path d="M56 420H308C304 477 250 520 182 520S60 477 56 420Z" />
+    </g>
+    <g id="right-pan">
+      <path d="M508 420L634 198L760 420" />
+      <path d="M508 420H760C756 477 702 520 634 520S512 477 508 420Z" />
+    </g>
+    <path id="base" d="M310 624H506C530 624 550 644 550 669H266C266 644 286 624 310 624Z" />
+  </g>
+</svg>

@@ -1,0 +1,185 @@
+{
+  "palette": {
+    "ink": "#1d1d1f",
+    "mist": "#f5f5f7",
+    "olive": "#606d3d",
+    "olive_light": "#c3cf8f"
+  },
+  "notes": "Illustrations are WebP on white/near-white backgrounds (no transparency). Icons are stroke-only SVGs (fill none, stroke #606d3d, stroke-width 44 on an 816 viewBox, about 3.5px at 64px), transparent background; width/height attributes are 64 and scale via CSS. To recolor, change stroke (or use inline SVG with currentColor).",
+  "files": [
+    {
+      "path": "assets/img/hero.webp",
+      "purpose": "Hero banner (geo vs user overview)",
+      "alt": "A minimal 3D map of U.S. regions, some highlighted olive as test markets, dissolving into a grid of individual dots representing people.",
+      "width": 1600,
+      "height": 679,
+      "bytes": 64614,
+      "model": "google/nano-banana-2.1"
+    },
+    {
+      "path": "assets/img/geo.webp",
+      "purpose": "Section illustration: geo-level testing",
+      "alt": "Isometric puzzle-like map of regions, with several regions highlighted in olive as test markets and the rest in light gray as controls.",
+      "width": 1000,
+      "height": 671,
+      "bytes": 15814,
+      "model": "google/nano-banana-2.1"
+    },
+    {
+      "path": "assets/img/user.webp",
+      "purpose": "Section illustration: user-level testing",
+      "alt": "A population of small spheres split by a clean gap into an olive treatment group and a gray holdout group.",
+      "width": 1000,
+      "height": 671,
+      "bytes": 45328,
+      "model": "google/nano-banana-2.1"
+    },
+    {
+      "path": "assets/img/planning.webp",
+      "purpose": "Section illustration: test planning",
+      "alt": "A floating calendar grid with a few olive-highlighted days, an S-shaped power curve ribbon behind it, and a thin timeline below.",
+      "width": 1000,
+      "height": 671,
+      "bytes": 17522,
+      "model": "google/nano-banana-2.1"
+    },
+    {
+      "path": "assets/img/methods.webp",
+      "purpose": "Section illustration: other measurement methods (MMM, etc.)",
+      "alt": "Layered translucent bands like a stacked area chart beneath a dark saturation curve that rises and levels off.",
+      "width": 1000,
+      "height": 671,
+      "bytes": 17594,
+      "model": "google/nano-banana-2.1"
+    },
+    {
+      "path": "assets/img/data.webp",
+      "purpose": "Section illustration: data requirements",
+      "alt": "Stacked rounded blocks and table-like slabs arranged as a tidy data store, with a few blocks in olive tones.",
+      "width": 1000,
+      "height": 671,
+      "bytes": 20042,
+      "model": "google/nano-banana-2.1"
+    },
+    {
+      "path": "assets/icons/geo-pin.svg",
+      "purpose": "Icon: Geo / location",
+      "alt": "Location pin icon",
+      "width": 64,
+      "height": 64,
+      "viewBox": "0 0 816 816",
+      "bytes": 433,
+      "model": "openai/gpt-image-2.6/flare/text-to-image (svg output)"
+    },
+    {
+      "path": "assets/icons/user.svg",
+      "purpose": "Icon: User / person",
+      "alt": "Person icon",
+      "width": 64,
+      "height": 64,
+      "viewBox": "0 0 816 816",
+      "bytes": 408,
+      "model": "openai/gpt-image-2.6/flare/text-to-image (svg output)"
+    },
+    {
+      "path": "assets/icons/split.svg",
+      "purpose": "Icon: A/B split / randomization",
+      "alt": "Arrow splitting into two paths icon",
+      "width": 64,
+      "height": 64,
+      "viewBox": "0 0 816 816",
+      "bytes": 412,
+      "model": "openai/gpt-image-2.6/flare/text-to-image (svg output)"
+    },
+    {
+      "path": "assets/icons/calendar.svg",
+      "purpose": "Icon: Calendar / timing",
+      "alt": "Calendar icon",
+      "width": 64,
+      "height": 64,
+      "viewBox": "0 0 816 816",
+      "bytes": 1359,
+      "model": "openai/gpt-image-2.6/flare/text-to-image (svg output)"
+    },
+    {
+      "path": "assets/icons/power-curve.svg",
+      "purpose": "Icon: Power curve / chart",
+      "alt": "Chart with rising S-curve icon",
+      "width": 64,
+      "height": 64,
+      "viewBox": "0 0 816 816",
+      "bytes": 340,
+      "model": "openai/gpt-image-2.6/flare/text-to-image (svg output)"
+    },
+    {
+      "path": "assets/icons/database.svg",
+      "purpose": "Icon: Database / data",
+      "alt": "Database icon",
+      "width": 64,
+      "height": 64,
+      "viewBox": "0 0 816 816",
+      "bytes": 471,
+      "model": "openai/gpt-image-2.6/flare/text-to-image (svg output)"
+    },
+    {
+      "path": "assets/icons/target.svg",
+      "purpose": "Icon: Target / MDE",
+      "alt": "Target icon",
+      "width": 64,
+      "height": 64,
+      "viewBox": "0 0 816 816",
+      "bytes": 403,
+      "model": "openai/gpt-image-2.6/flare/text-to-image (svg output)"
+    },
+    {
+      "path": "assets/icons/shield.svg",
+      "purpose": "Icon: Privacy",
+      "alt": "Shield with checkmark icon",
+      "width": 64,
+      "height": 64,
+      "viewBox": "0 0 816 816",
+      "bytes": 490,
+      "model": "openai/gpt-image-2.6/flare/text-to-image (svg output)"
+    },
+    {
+      "path": "assets/icons/layers.svg",
+      "purpose": "Icon: Layers / MMM",
+      "alt": "Stacked layers icon",
+      "width": 64,
+      "height": 64,
+      "viewBox": "0 0 816 816",
+      "bytes": 610,
+      "model": "openai/gpt-image-2.6/flare/text-to-image (svg output)"
+    },
+    {
+      "path": "assets/icons/scale.svg",
+      "purpose": "Icon: Compare / tradeoffs",
+      "alt": "Balance scale icon",
+      "width": 64,
+      "height": 64,
+      "viewBox": "0 0 816 816",
+      "bytes": 750,
+      "model": "openai/gpt-image-2.6/flare/text-to-image (svg output)"
+    },
+    {
+      "path": "assets/icons/checklist.svg",
+      "purpose": "Icon: Checklist / planning steps",
+      "alt": "Checklist icon",
+      "width": 64,
+      "height": 64,
+      "viewBox": "0 0 816 816",
+      "bytes": 439,
+      "model": "openai/gpt-image-2.6/flare/text-to-image (svg output)"
+    },
+    {
+      "path": "assets/icons/warning.svg",
+      "purpose": "Icon: Warning / pitfalls",
+      "alt": "Warning triangle icon",
+      "width": 64,
+      "height": 64,
+      "viewBox": "0 0 816 816",
+      "bytes": 495,
+      "model": "openai/gpt-image-2.6/flare/text-to-image (svg output)"
+    }
+  ]
+}

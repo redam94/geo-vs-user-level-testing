@@ -1,0 +1,8 @@
+<svg viewBox="0 0 816 816" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+  <g id="database" fill="none" stroke="#606d3d" stroke-width="44" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="408" cy="198" rx="269" ry="103" />
+    <path d="M139 198V605C139 662 259 708 408 708S677 662 677 605V198" />
+    <path d="M139 333C139 390 259 436 408 436S677 390 677 333" />
+    <path d="M139 469C139 526 259 572 408 572S677 526 677 469" />
+  </g>
+</svg>

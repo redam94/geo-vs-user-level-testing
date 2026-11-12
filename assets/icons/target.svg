@@ -1,0 +1,8 @@
+<svg viewBox="0 0 816 816" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+  <g id="target" fill="none" stroke="#606d3d" stroke-width="44" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="408" cy="408" r="320" />
+    <circle cx="408" cy="408" r="220" />
+    <circle cx="408" cy="408" r="120" />
+    <circle cx="408" cy="408" r="30" fill="#606d3d" stroke="none" />
+  </g>
+</svg>

@@ -1,0 +1,7 @@
+<svg viewBox="0 0 816 816" width="64" height="64" fill="none" stroke="#606d3d" stroke-width="44" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+  <g id="warning">
+    <path id="triangle" d="M360 163 Q408 107 456 163 L714 596 Q740 638 705 666 Q689 680 660 680 H156 Q127 680 111 666 Q76 638 102 596 Z" />
+    <path id="exclamation-stem" d="M408 310 V486" />
+    <circle id="exclamation-dot" cx="408" cy="568" r="28" fill="#606d3d" stroke="none" />
+  </g>
+</svg>

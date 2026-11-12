@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Geo testing · Geo vs User-Level Testing</title>
+  <meta name="description" content="Geo-level incrementality testing for media: design families, synthetic control, DiD and CausalImpact estimators, data needs, diagnostics and common pitfalls.">
+  <meta name="theme-color" content="#000000">
+  <meta name="color-scheme" content="light">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Geo vs User-Level Testing">
+  <meta property="og:title" content="Geo testing · Geo vs User-Level Testing">
+  <meta property="og:description" content="Geo-level incrementality testing for media: design families, synthetic control, DiD and CausalImpact estimators, data needs, diagnostics and common pitfalls.">
+  <meta property="og:url" content="https://redam94.github.io/geo-vs-user-level-testing/geo-testing.html">
+  <meta property="og:image" content="https://redam94.github.io/geo-vs-user-level-testing/assets/img/hero.webp">
+  <meta property="og:image:alt" content="A minimal 3D map of U.S. regions, some highlighted olive as test markets, dissolving into a grid of individual dots representing people.">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/svg+xml" href="assets/icons/split.svg">
+  <link rel="stylesheet" href="assets/css/site.css">
+  <script src="assets/js/site.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="nav">
+    <div class="nav-inner">
+      <a class="nav-brand" href="index.html"><span class="icon icon-split" aria-hidden="true"></span>Geo vs User Testing</a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu"><span class="nav-toggle-bars" aria-hidden="true"></span><span class="sr-only">Menu</span></button>
+      <nav class="nav-menu" id="nav-menu" aria-label="Primary">
+        <ul class="nav-links">
+          <li><a href="index.html">Overview</a></li>
+          <li><a href="geo-testing.html" aria-current="page">Geo testing</a></li>
+          <li><a href="user-level-testing.html">User-level testing</a></li>
+          <li><a href="compare.html">Compare</a></li>
+          <li><a href="planning.html">Planning</a></li>
+          <li><a href="other-methods.html">Other methods</a></li>
+          <li><a href="sources.html">Sources</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <section class="subhero on-dark" aria-labelledby="page-title">
+      <div class="wrap">
+        <span class="icon-badge"><span class="icon icon-geo-pin" aria-hidden="true"></span></span>
+        <p class="eyebrow">Geo-level testing</p>
+        <h1 class="subhero-title" id="page-title">Randomize regions, not people.</h1>
+        <p class="subhero-lede">How geo experiments work, which design and estimator to pick, what data they need, how to check the fit, and where they quietly go wrong.</p>
+        <div class="meta"><span>Unit: DMA, state, commuting zone</span><span>Identity: none</span><span>Reads: total business, offline</span></div>
+        <div class="subhero-media">
+          <img src="assets/img/geo.webp" width="1000" height="671" alt="Isometric puzzle-like map of regions, with several regions highlighted in olive as test markets and the rest in light gray as controls.">
+        </div>
+      </div>
+    </section>
+
+    <div class="toc-band on-light">
+      <div class="wrap">
+        <nav class="toc" data-toc aria-label="On this page"></nav>
+      </div>
+    </div>
+
+    <!-- What it is -->
+    <section class="section on-light" aria-labelledby="what">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Basics</p>
+          <h2 class="headline" id="what" data-toc-label="What it is">What a geo test is.</h2>
+          <p class="lede">Change advertising in some places, leave it alone in others, and compare what each place sold. The geo, not the person, is the unit of assignment and analysis.</p>
+        </div>
+        <div class="split mt-m">
+          <div class="prose">
+            <p>A geo-level test changes advertising in some <strong>geographic units</strong> (DMAs, states, commuting zones, postal codes, cities) and leaves it unchanged in others. It then compares an aggregate KPI per geo, such as sales, sign-ups, store visits or site sessions, against a <strong>counterfactual</strong>: what the treated geos would have done without the change.</p>
+            <p>Google's 2011 paper made the case for advertisers. Non-overlapping regions are randomly assigned to control or treatment, and the paper argues that geo experiments are "conceptually simple" and "provide results that are easy to interpret"<sup class="cite"><a href="#ref-1">1</a></sup>.</p>
+            <p>The main reason to work at the geo level is that it needs <strong>no user identity</strong>. User-level randomization online suffers from multiple devices and cookie churn. Geo experiments sidestep both and "capture the full effects of advertising, including offline sales and conversions over longer periods of time"<sup class="cite"><a href="#ref-2">2</a></sup>.</p>
+            <p>Everything else on this page follows from one fact: you have <em>few</em> units. Even in the US, Google's national geo experiments work with "over 210 geos"<sup class="cite"><a href="#ref-2">2</a></sup>, and most countries have far fewer regions. That is why the choice of design and estimator matters so much more here than in a <a href="user-level-testing.html">user-level test</a>.</p>
+          </div>
+          <div>
+            <dl class="deflist">
+              <div><dt>Geo</dt><dd>The unit you randomize and analyze: a DMA, state, commuting zone, postal code or city.</dd></div>
+              <div><dt>Counterfactual</dt><dd>The KPI the treated geos would have produced without the media change. Every estimator below is a different way to build it.</dd></div>
+              <div><dt>Donor pool</dt><dd>The untreated geos available to build that counterfactual.</dd></div>
+              <div><dt>iROAS</dt><dd>Incremental return on ad spend: incremental revenue divided by the change in spend<sup class="cite"><a href="#ref-2">2</a></sup>.</dd></div>
+              <div><dt>Pre-period</dt><dd>History before the test, used to learn how treated and control geos move together.</dd></div>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Design families -->
+    <section class="section on-mist" aria-labelledby="designs">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Design families</p>
+          <h2 class="headline" id="designs" data-toc-label="Designs">Six ways to split the map.</h2>
+          <p class="lede">The design decides which geos get the change and what the change is. Pick it from how many geos you have and whether the channel is new or already running.</p>
+        </div>
+
+        <div class="tiles tiles-3 mt-m">
+          <article class="tile on-light reveal">
+            <div class="tile-copy">
+              <span class="icon-badge tile-icon"><span class="icon icon-split" aria-hidden="true"></span></span>
+              <p class="eyebrow">Many geos</p>
+              <h3 class="tile-title">Randomized geo experiment (GBR)</h3>
+              <p class="tile-tag">Many geos are randomly split, often stratified by size.</p>
+              <p class="tile-desc">Analyzed with geo-based regression. Suits national channels in large countries where many geos are available<sup class="cite"><a href="#ref-1">1</a></sup><sup class="cite"><a href="#ref-2">2</a></sup>.</p>
+            </div>
+          </article>
+          <article class="tile on-light reveal">
+            <div class="tile-copy">
+              <span class="icon-badge tile-icon"><span class="icon icon-scale" aria-hidden="true"></span></span>
+              <p class="eyebrow">Few geos</p>
+              <h3 class="tile-title">Matched markets (TBR)</h3>
+              <p class="tile-tag">A few hand-picked or algorithmically matched test and control markets.</p>
+              <p class="tile-desc">For when few geos are available or the campaign is limited to some markets. Analyzed with time-based regression, down to one market against one<sup class="cite"><a href="#ref-3">3</a></sup><sup class="cite"><a href="#ref-4">4</a></sup>.</p>
+            </div>
+          </article>
+          <article class="tile on-light reveal">
+            <div class="tile-copy">
+              <span class="icon-badge tile-icon"><span class="icon icon-target" aria-hidden="true"></span></span>
+              <p class="eyebrow">Heterogeneous geos</p>
+              <h3 class="tile-title">Matched pairs (Trimmed Match)</h3>
+              <p class="tile-tag">Pair geos first, then flip a coin within each pair.</p>
+              <p class="tile-desc">Gives robust iROAS estimates when geos differ a lot in size and behaviour<sup class="cite"><a href="#ref-5">5</a></sup>.</p>
+            </div>
+          </article>
+          <article class="tile on-light reveal">
+            <div class="tile-copy">
+              <span class="icon-badge tile-icon"><span class="icon icon-power-curve" aria-hidden="true"></span></span>
+              <p class="eyebrow">More spend</p>
+              <h3 class="tile-title">Heavy-up / scale test</h3>
+              <p class="tile-tag">Treated geos get extra spend on top of business as usual.</p>
+              <p class="tile-desc">Measures the marginal return at a higher spend level, not the value of the channel as a whole.</p>
+            </div>
+          </article>
+          <article class="tile on-light reveal">
+            <div class="tile-copy">
+              <span class="icon-badge tile-icon"><span class="icon icon-shield" aria-hidden="true"></span></span>
+              <p class="eyebrow">Ongoing channel</p>
+              <h3 class="tile-title">Go-dark / holdout (Inverse GeoLift)</h3>
+              <p class="tile-tag">Switch media off in the treated geos.</p>
+              <p class="tile-desc">GeoLift's guidance: "ongoing media is best tested with an Inverse GeoLift"<sup class="cite"><a href="#ref-6">6</a></sup>. It holds out only the treatment group, which limits opportunity cost.</p>
+            </div>
+          </article>
+          <article class="tile on-light reveal">
+            <div class="tile-copy">
+              <span class="icon-badge tile-icon"><span class="icon icon-calendar" aria-hidden="true"></span></span>
+              <p class="eyebrow">Phased launch</p>
+              <h3 class="tile-title">Staggered rollout</h3>
+              <p class="tile-tag">Geos adopt the treatment at different dates.</p>
+              <p class="tile-desc">Common for phased launches or for measuring a change after the fact. Needs a heterogeneity-robust DiD estimator<sup class="cite"><a href="#ref-7">7</a></sup>.</p>
+            </div>
+          </article>
+        </div>
+
+        <div class="prose mt-l">
+          <div class="callout note">
+            <p class="callout-title">A famous go-dark</p>
+            <p>eBay turned off paid search in 68 DMAs for 60 days. Brand-keyword ads had no measurable short-term benefit, because almost all of the lost traffic moved to organic search<sup class="cite"><a href="#ref-8">8</a></sup>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="statement on-dark" aria-label="Key idea">
+      <div class="wrap">
+        <figure>
+          <blockquote>The design picks the geos. The estimator builds the world where nothing changed.</blockquote>
+          <figcaption>Most disagreements about a geo result are really disagreements about the counterfactual.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- Estimators -->
+    <section class="section on-light" aria-labelledby="estimators">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Estimators</p>
+          <h2 class="headline" id="estimators">How the counterfactual gets built.</h2>
+          <p class="lede">Each estimator answers the same question, "what would the test geos have done?", with a different recipe. Open one for the intuition, then use the table to compare them.</p>
+        </div>
+
+        <div class="mt-m">
+          <details class="accordion">
+            <summary>Geo-based regression (GBR)</summary>
+            <div class="accordion-body">
+              <p><strong>Intuition:</strong> across many geos, geos that got more incremental spend should show more test-period response than their own history predicts. The slope of that relationship is the iROAS.</p>
+              <p>GBR regresses each geo's test-period response on its pre-period response and its incremental spend. It is weighted by 1/pre-period volume to handle heteroscedasticity, so geos with near-zero volume get very large weights and the smallest geos are best combined. Google prefers it "for experiments with 30, or more, geos" and points to time-series methods when fewer are available<sup class="cite"><a href="#ref-2">2</a></sup>.</p>
+            </div>
+          </details>
+          <details class="accordion">
+            <summary>Time-based regression (TBR)</summary>
+            <div class="accordion-body">
+              <p><strong>Intuition:</strong> learn how the test markets track the control markets before the test, then use that relationship to predict what the test markets "should" have done during it.</p>
+              <p>TBR regresses the aggregated treatment series on the aggregated control series over the pre-period, projects that relationship into the test period, and reads the cumulative causal effect off the gap. It works for few geos, including a single test region against a single control region<sup class="cite"><a href="#ref-3">3</a></sup>. Google's open-source <code>matched_markets</code> library pairs TBR analysis with a greedy matched-markets design search restricted to designs that meet budget and geo-assignment constraints<sup class="cite"><a href="#ref-9">9</a></sup><sup class="cite"><a href="#ref-4">4</a></sup>.</p>
+            </div>
+          </details>
+          <details class="accordion">
+            <summary>Synthetic control (SC)</summary>
+            <div class="accordion-body">
+              <p><strong>Intuition:</strong> no single control market looks like your test market, but a blend might. Find the weighted mix of untreated geos whose history traces the test market's history, and let that blend play the role of "the test market without ads".</p>
+              <p>The counterfactual is a <strong>convex, non-negative weighted combination of donor geos</strong>, with weights chosen so the blend tracks the treated unit's pre-period KPI<sup class="cite"><a href="#ref-10">10</a></sup><sup class="cite"><a href="#ref-11">11</a></sup>. As summarized in <a href="https://redam94.github.io/second-brain/Research/Econometrics/Identification-Strategies/Synthetic-Control-Requirements">Synthetic Control Requirements</a>, it has three advantages over regression<sup class="cite"><a href="#ref-12">12</a></sup>:</p>
+              <ul>
+                <li><strong>No extrapolation.</strong> Weights are non-negative and sum to 1.</li>
+                <li><strong>Transparency.</strong> Named donors and sparse weights that a domain expert can sanity-check.</li>
+                <li><strong>Pre-registrable.</strong> Weights depend only on pre-period data, so the design can be locked before any outcome is seen.</li>
+              </ul>
+            </div>
+          </details>
+          <details class="accordion">
+            <summary>Augmented, penalized and generalized SC; synthetic DiD</summary>
+            <div class="accordion-body">
+              <p><strong>Intuition:</strong> plain SC fails when no blend fits well or when several geos are treated. These variants patch those gaps.</p>
+              <ul>
+                <li><strong>Augmented SC (ASCM)</strong> adds an outcome model, such as ridge regression, to correct bias when the pre-period fit is imperfect, that is, when the treated unit sits outside the donors' convex hull<sup class="cite"><a href="#ref-13">13</a></sup><sup class="cite"><a href="#ref-14">14</a></sup>. Meta's <strong>GeoLift</strong> is built on ASCM; its <code>model</code> options are none, ridge, GSC, or "best"<sup class="cite"><a href="#ref-15">15</a></sup>.</li>
+                <li><strong>Penalized SC</strong> (Abadie &amp; L'Hour) handles multiple treated units by penalizing donors far from each treated unit, which gives unique, sparse weights<sup class="cite"><a href="#ref-14">14</a></sup>.</li>
+                <li><strong>Generalized SC (GSC)</strong> fits an interactive fixed-effects model on control units, projects the treated units' pre-period onto the estimated factors and imputes their counterfactuals. It handles multiple treated units and staggered timing, picks the number of factors by cross-validation and gives parametric-bootstrap standard errors. Ordinary DiD is the special case with constant factor loadings<sup class="cite"><a href="#ref-16">16</a></sup><sup class="cite"><a href="#ref-17">17</a></sup>. It needs <strong>both a large control pool and a long pre-period</strong>; a short pre-period makes the loadings imprecise and the estimate biased<sup class="cite"><a href="#ref-17">17</a></sup>.</li>
+                <li><strong>Synthetic DiD</strong> combines unit weights, as in SC, with time weights, as in DiD<sup class="cite"><a href="#ref-18">18</a></sup>.</li>
+              </ul>
+            </div>
+          </details>
+          <details class="accordion">
+            <summary>Difference-in-differences (DiD), including staggered rollouts</summary>
+            <div class="accordion-body">
+              <p><strong>Intuition:</strong> the control geos tell you how much the test geos would have changed anyway. Subtract that from how much they actually changed.</p>
+              <p>DiD compares the treated group's pre-to-post change with the control group's change. It relies on <strong>parallel trends</strong>: without treatment, the groups would have moved together<sup class="cite"><a href="#ref-19">19</a></sup>.</p>
+              <p><strong>Staggered rollouts</strong> are where DiD bites. A plain two-way fixed-effects (TWFE) regression can put negative weights on some cohort-period effects, and its coefficient can even have the wrong sign when effects change over time<sup class="cite"><a href="#ref-20">20</a></sup><sup class="cite"><a href="#ref-21">21</a></sup>. Callaway &amp; Sant'Anna first estimate group-time effects ATT(g,t), then aggregate them into event-study, cohort or overall summaries, using never-treated or not-yet-treated geos as comparisons, with optional covariates and doubly-robust estimators<sup class="cite"><a href="#ref-7">7</a></sup><sup class="cite"><a href="#ref-21">21</a></sup><sup class="cite"><a href="#ref-22">22</a></sup>. In the paper's minimum-wage application, TWFE found "no effect" while the CS estimator found about −3.1%<sup class="cite"><a href="#ref-21">21</a></sup>.</p>
+              <p>The framework allows a known anticipation horizon, and the authors warn against choosing between parallel-trends assumptions by pre-testing<sup class="cite"><a href="#ref-22">22</a></sup>.</p>
+            </div>
+          </details>
+          <details class="accordion">
+            <summary>Bayesian DiD</summary>
+            <div class="accordion-body">
+              <p><strong>Intuition:</strong> the same DiD comparison, written so you get a full distribution of plausible effects instead of one number and a standard error.</p>
+              <p>Bayesian DiD writes the model as a Bayesian regression, for example in PyMC, which gives a full posterior for the effect and explicit counterfactual draws. The identifying assumptions do not change: parallel trends still has to hold<sup class="cite"><a href="#ref-23">23</a></sup>.</p>
+            </div>
+          </details>
+          <details class="accordion">
+            <summary>CausalImpact (Bayesian structural time series) on geos</summary>
+            <div class="accordion-body">
+              <p><strong>Intuition:</strong> forecast the test geos' KPI from their own trend and seasonality plus the control geos, as if the campaign never ran, and treat the forecast error after launch as the effect.</p>
+              <p>CausalImpact is a Bayesian state-space model with a local trend, seasonality and a regression on control series. A spike-and-slab prior selects which controls to use, and posterior predictive draws give the counterfactual and credible intervals for pointwise, cumulative and running-average effects<sup class="cite"><a href="#ref-24">24</a></sup><sup class="cite"><a href="#ref-25">25</a></sup>. DiD and SC are special cases of it<sup class="cite"><a href="#ref-25">25</a></sup>. The paper's own application is a geo experiment, walked through in the <a href="#example">worked example</a> below<sup class="cite"><a href="#ref-26">26</a></sup>.</p>
+            </div>
+          </details>
+        </div>
+
+        <div class="table-scroll mt-l" role="region" aria-label="Geo estimators compared" tabindex="0">
+          <table class="compare compare-wide">
+            <caption>Geo estimators at a glance</caption>
+            <thead>
+              <tr><th scope="col">Estimator</th><th scope="col">Counterfactual built from</th><th scope="col">Best when</th><th scope="col">Watch out for</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">GBR</th><td>Each geo's pre-period response plus its incremental spend</td><td>About 30 or more randomized geos<sup class="cite"><a href="#ref-2">2</a></sup></td><td>Tiny geos get huge weights; combine them<sup class="cite"><a href="#ref-2">2</a></sup></td></tr>
+              <tr><th scope="row">TBR</th><td>Aggregated control series, projected from the pre-period</td><td>Few geos, down to 1 vs 1<sup class="cite"><a href="#ref-3">3</a></sup></td><td>Control and test sets that do not predict each other in the pre-period<sup class="cite"><a href="#ref-9">9</a></sup></td></tr>
+              <tr><th scope="row">Synthetic control</th><td>Convex blend of donor geos</td><td>One or a few treated geos; transparent, pre-registrable weights<sup class="cite"><a href="#ref-12">12</a></sup></td><td>Treated geo outside the donors' convex hull; fewer than about 5 donors<sup class="cite"><a href="#ref-12">12</a></sup></td></tr>
+              <tr><th scope="row">Augmented SC (GeoLift)</th><td>SC plus an outcome model</td><td>Several treated geos with imperfect pre-fit<sup class="cite"><a href="#ref-13">13</a></sup><sup class="cite"><a href="#ref-15">15</a></sup></td><td>Imbalance metrics; aggregation choices (see <a href="#pitfalls">pitfalls</a>)</td></tr>
+              <tr><th scope="row">Generalized SC</th><td>Interactive fixed-effects factors fit on controls</td><td>Multiple treated units, staggered timing<sup class="cite"><a href="#ref-16">16</a></sup></td><td>Needs a large control pool and a long pre-period<sup class="cite"><a href="#ref-17">17</a></sup></td></tr>
+              <tr><th scope="row">DiD / staggered DiD</th><td>Control group's pre-to-post change</td><td>Phased rollouts (Callaway–Sant'Anna)<sup class="cite"><a href="#ref-7">7</a></sup></td><td>Parallel trends; TWFE negative weights<sup class="cite"><a href="#ref-20">20</a></sup></td></tr>
+              <tr><th scope="row">Bayesian DiD</th><td>As DiD, with posterior draws</td><td>You want a full posterior<sup class="cite"><a href="#ref-23">23</a></sup></td><td>Same assumptions as DiD<sup class="cite"><a href="#ref-23">23</a></sup></td></tr>
+              <tr><th scope="row">CausalImpact</th><td>Trend, seasonality and regression on control series</td><td>You want trend and seasonality modelling and credible intervals<sup class="cite"><a href="#ref-24">24</a></sup></td><td>Intervals can be wider than regression's; narrower is not automatically better<sup class="cite"><a href="#ref-26">26</a></sup></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- When to use -->
+    <section class="section on-mist" aria-labelledby="when">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Fit</p>
+          <h2 class="headline" id="when">When a geo test is the right tool.</h2>
+          <p class="lede">Geo tests shine where identity is missing or the outcome happens offline. They struggle when the effect is small and the map is small.</p>
+        </div>
+
+        <div class="proscons mt-m">
+          <div class="proscons-col">
+            <h3>Use it when</h3>
+            <ul class="list-pro">
+              <li>The KPI is only observed in <strong>aggregate or offline</strong>: retail sales, call centers, dealer sales, or anything without user identity.</li>
+              <li>The channel <strong>cannot be targeted or randomized per person</strong>: TV, radio, OOH, print, or walled gardens without a lift tool.</li>
+              <li>You need <strong>cross-channel or total-business</strong> incrementality, including halo and organic substitution<sup class="cite"><a href="#ref-8">8</a></sup>.</li>
+              <li>Cookie or device loss makes user-level holdouts leaky<sup class="cite"><a href="#ref-2">2</a></sup>.</li>
+              <li>You need experimental iROAS to <strong>calibrate an MMM</strong>. GeoLift notes calibration is more complex for inverse (go-dark) designs<sup class="cite"><a href="#ref-6">6</a></sup>.</li>
+            </ul>
+          </div>
+          <div class="proscons-col">
+            <h3>Avoid it, or switch designs, when</h3>
+            <ul class="list-con">
+              <li>The expected effect is <strong>small relative to geo-level noise</strong> and the test is short<sup class="cite"><a href="#ref-12">12</a></sup>.</li>
+              <li>Too few comparable, uncontaminated geos exist. Permutation inference is not meaningful with fewer than about 5 donors (vault summary of Abadie 2021)<sup class="cite"><a href="#ref-12">12</a></sup>.</li>
+              <li>The treated market is unlike any combination of donors, such as a dominant capital city<sup class="cite"><a href="#ref-12">12</a></sup><sup class="cite"><a href="#ref-2">2</a></sup>.</li>
+              <li>User-level randomization is available and identity is clean: with many more units it is usually far more powerful per dollar <span class="flag">practitioner heuristic</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="section-head mt-l">
+          <h3 class="subhead">Which geo design and estimator?</h3>
+        </div>
+        <ol class="decision mt-m">
+          <li><p class="decision-q">About 30 or more geos, and you can randomize?</p><p class="decision-a"><strong>Stratified randomized geo experiment with GBR</strong>, or a paired design with Trimmed Match<sup class="cite"><a href="#ref-2">2</a></sup><sup class="cite"><a href="#ref-5">5</a></sup>.</p></li>
+          <li><p class="decision-q">Few geos, or a single market?</p><p class="decision-a"><strong>TBR or synthetic control</strong>, with algorithmic matched-market design<sup class="cite"><a href="#ref-3">3</a></sup><sup class="cite"><a href="#ref-9">9</a></sup>.</p></li>
+          <li><p class="decision-q">Several treated geos and an imperfect pre-period fit?</p><p class="decision-a"><strong>Augmented SC (GeoLift) or generalized SC</strong><sup class="cite"><a href="#ref-13">13</a></sup><sup class="cite"><a href="#ref-15">15</a></sup><sup class="cite"><a href="#ref-16">16</a></sup>.</p></li>
+          <li><p class="decision-q">Ongoing channel, and you want to minimize revenue risk?</p><p class="decision-a"><strong>Inverse GeoLift / go-dark holdout</strong><sup class="cite"><a href="#ref-6">6</a></sup>.</p></li>
+          <li><p class="decision-q">Phased rollout across geos?</p><p class="decision-a"><strong>Callaway–Sant'Anna staggered DiD</strong><sup class="cite"><a href="#ref-7">7</a></sup>.</p></li>
+          <li><p class="decision-q">Want a full posterior or explicit trend and seasonality modelling?</p><p class="decision-a"><strong>CausalImpact / BSTS, or Bayesian DiD</strong><sup class="cite"><a href="#ref-24">24</a></sup><sup class="cite"><a href="#ref-23">23</a></sup>.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- Pros and cons -->
+    <section class="section on-light" aria-labelledby="pros-cons">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Trade-offs</p>
+          <h2 class="headline" id="pros-cons">Pros and cons.</h2>
+          <p class="lede">The strengths come from aggregation. So do the weaknesses.</p>
+        </div>
+        <div class="proscons mt-m">
+          <div class="proscons-col">
+            <h3>Pros</h3>
+            <ul class="list-pro">
+              <li>Privacy-durable and identity-free; works on first-party sales data<sup class="cite"><a href="#ref-2">2</a></sup>.</li>
+              <li>Captures offline sales, delayed conversions and cross-channel effects<sup class="cite"><a href="#ref-2">2</a></sup>.</li>
+              <li>Works for media that cannot be targeted to individuals.</li>
+              <li>True randomization is possible with enough geos<sup class="cite"><a href="#ref-1">1</a></sup>, and even matched-market SC designs can be pre-registered<sup class="cite"><a href="#ref-12">12</a></sup>.</li>
+              <li>Results come as iROAS and incremental units, which finance and MMM teams can use.</li>
+            </ul>
+          </div>
+          <div class="proscons-col">
+            <h3>Cons</h3>
+            <ul class="list-con">
+              <li><strong>Few units, so low power.</strong> Just over 210 geos in the US<sup class="cite"><a href="#ref-2">2</a></sup>, far fewer regions in most countries, so intervals are wide.</li>
+              <li><strong>Opportunity cost.</strong> Go-dark tests forgo revenue, and standard GeoLifts often need more than half of locations in control<sup class="cite"><a href="#ref-6">6</a></sup>.</li>
+              <li><strong>Spillover across borders</strong> from commuting, media signals that cross DMA lines and shipping addresses that differ from where the ad was seen <span class="flag">practitioner knowledge</span></li>
+              <li><strong>Imperfect geo-targeting</strong> in digital platforms, because IP-based location is noisy <span class="flag">practitioner heuristic</span></li>
+              <li><strong>Local shocks</strong> (weather, competitor promotions, store openings, local news) can swamp the signal<sup class="cite"><a href="#ref-12">12</a></sup>.</li>
+              <li>Results are <strong>average effects for the treated geos</strong>. Carrying them to other markets or spend levels is an assumption.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Data requirements -->
+    <section class="section on-mist" aria-labelledby="data">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Data</p>
+          <h2 class="headline" id="data" data-toc-label="Data needs">What the data has to look like.</h2>
+          <p class="lede">The minimum is a clean panel of location, date and KPI. Power comes from how many geos you have and how much stable history sits behind them.</p>
+        </div>
+
+        <ul class="stats mt-m">
+          <li class="stat"><span class="stat-value">≥30</span><span class="stat-label">Geos preferred for geo-based regression</span><span class="stat-note">Google DS blog<sup class="cite"><a href="#ref-2">2</a></sup></span></li>
+          <li class="stat"><span class="stat-value">≥20</span><span class="stat-label">Geo-units recommended for GeoLift</span><span class="stat-note">GeoLift Best Practices<sup class="cite"><a href="#ref-27">27</a></sup></span></li>
+          <li class="stat"><span class="stat-value">4–5×</span><span class="stat-label">Pre-period length relative to test duration, with ≥25 pre-treatment periods</span><span class="stat-note">GeoLift Best Practices<sup class="cite"><a href="#ref-27">27</a></sup></span></li>
+        </ul>
+
+        <table class="compare mt-l">
+          <caption>Geo test data requirements</caption>
+          <thead>
+            <tr><th scope="col">Dimension</th><th scope="col">Guidance</th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">Minimum schema</th><td data-label="Guidance">Location, date (yyyy-mm-dd), KPI. Covariates are optional<sup class="cite"><a href="#ref-15">15</a></sup>.</td></tr>
+            <tr><th scope="row">Geography</th><td data-label="Guidance">DMA (the US standard for media), state, commuting zone, ZIP or postal code. Coarser units reduce spillover but leave fewer units<sup class="cite"><a href="#ref-2">2</a></sup>. GeoLift supports commuting zones to "take the commuter effect into account"<sup class="cite"><a href="#ref-28">28</a></sup>.</td></tr>
+            <tr><th scope="row">Time grain</th><td data-label="Guidance">Daily is preferred over weekly<sup class="cite"><a href="#ref-27">27</a></sup>.</td></tr>
+            <tr><th scope="row">Number of geos</th><td data-label="Guidance">GBR: ≥30 preferred<sup class="cite"><a href="#ref-2">2</a></sup>. GeoLift: ≥20 geo-units<sup class="cite"><a href="#ref-27">27</a></sup>. TBR: works down to 1 vs 1<sup class="cite"><a href="#ref-3">3</a></sup>.</td></tr>
+            <tr><th scope="row">Pre-period</th><td data-label="Guidance">GeoLift: "at least 4 - 5x the test duration," ≥25 pre-treatment periods, ideally 52 weeks of history for seasonality<sup class="cite"><a href="#ref-27">27</a></sup>. Google GBR examples: "typically 4 to 8 weeks"<sup class="cite"><a href="#ref-2">2</a></sup>. CausalImpact example: about 1 year<sup class="cite"><a href="#ref-26">26</a></sup>.</td></tr>
+            <tr><th scope="row">Stability</th><td data-label="Guidance">Avoid structural breaks in the pre-period. If history is long and unstable, weight recent periods more<sup class="cite"><a href="#ref-12">12</a></sup>.</td></tr>
+            <tr><th scope="row">KPI choice</th><td data-label="Guidance">Use the business outcome closest to the decision (sales, new customers). Proxy KPIs and leading indicators raise power when the post-period is short, but must be validated<sup class="cite"><a href="#ref-12">12</a></sup>.</td></tr>
+            <tr><th scope="row">Spend data</th><td data-label="Guidance">Planned and actual spend per geo per period, needed for iROAS and for heavy-up or go-dark contrasts<sup class="cite"><a href="#ref-2">2</a></sup>.</td></tr>
+            <tr><th scope="row">Data hygiene</th><td data-label="Guidance">No missing location-dates. GeoLift drops locations with NAs or missing timestamps<sup class="cite"><a href="#ref-15">15</a></sup>.</td></tr>
+            <tr><th scope="row">Concurrent activity log</th><td data-label="Guidance">Other campaigns, local media, pricing and distribution changes per geo. Keep these constant across test and control<sup class="cite"><a href="#ref-27">27</a></sup>.</td></tr>
+          </tbody>
+        </table>
+
+        <div class="prose mt-m">
+          <div class="callout caveat">
+            <p class="callout-title"><span class="icon icon-warning" aria-hidden="true"></span>The pre-period guidance disagrees</p>
+            <p>GeoLift asks for a pre-period of 4–5× the test length and ideally a year of history<sup class="cite"><a href="#ref-27">27</a></sup>, while Google's GBR examples use 4 to 8 weeks<sup class="cite"><a href="#ref-2">2</a></sup>. One likely reason is that they describe different estimators: GBR uses the pre-period as one covariate per geo, while synthetic-control methods learn weights from the whole pre-period series <span class="flag">this guide's inference</span> Follow the guidance for the estimator you will actually run.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Planning -->
+    <section class="section on-light" aria-labelledby="planning">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Design</p>
+          <h2 class="headline" id="planning" data-toc-label="Planning">Plan it before you run it.</h2>
+          <p class="lede">Geo tests are powered by simulation on your own history, not by a formula. The full checklist lives on the <a href="planning.html">planning page</a>; these are the geo-specific steps.</p>
+        </div>
+
+        <ol class="steps steps-vertical mt-m">
+          <li>
+            <h3>State the decision and estimand</h3>
+            <p>Name the decision the test feeds, such as "cut or keep linear TV in region X", and the estimand: iROAS, lift % or incremental conversions. Decide one-sided or two-sided in advance; one-sided tests gain power when the direction is known<sup class="cite"><a href="#ref-29">29</a></sup>.</p>
+          </li>
+          <li>
+            <h3>Simulate power and MDE</h3>
+            <p>GeoLift's <code>GeoLiftMarketSelection()</code> injects synthetic effects into candidate market sets, durations and effect sizes; its walkthrough uses effects of 0–50% in 5-point steps, α = 0.1, 2–5 test markets and 10–15 day tests, with optional <code>budget</code> and <code>cpic</code> constraints. Re-check the top candidates with a longer lookback window<sup class="cite"><a href="#ref-15">15</a></sup>. Google suggests stating precision as a target CI half-width on iROAS (for example ±1.0) plus a false-positive rate<sup class="cite"><a href="#ref-2">2</a></sup>. A bigger spend contrast means more power, limited by inventory and diminishing returns<sup class="cite"><a href="#ref-2">2</a></sup>.</p>
+          </li>
+          <li>
+            <h3>Select and assign markets</h3>
+            <p>Randomize when possible, stratified by geo size<sup class="cite"><a href="#ref-2">2</a></sup>, or paired when geos are heterogeneous<sup class="cite"><a href="#ref-5">5</a></sup>. Otherwise use algorithmic matched-market search (TBRMM greedy search, GeoLift market selection) rather than intuition<sup class="cite"><a href="#ref-9">9</a></sup><sup class="cite"><a href="#ref-15">15</a></sup>. Avoid dominant markets: London and Paris "dominate entire countries"<sup class="cite"><a href="#ref-2">2</a></sup>. Exclude neighbours of treated geos and geos running similar interventions from the donor pool<sup class="cite"><a href="#ref-12">12</a></sup>.</p>
+          </li>
+          <li>
+            <h3>Set duration, cooldown and budget</h3>
+            <p>Run for at least one full purchase cycle<sup class="cite"><a href="#ref-27">27</a></sup>: GeoLift suggests ≥15 days for daily data or 4–6 weeks for weekly data<sup class="cite"><a href="#ref-27">27</a></sup>; Google's GBR examples run 3–5 weeks<sup class="cite"><a href="#ref-2">2</a></sup>. Keep measuring after media stops, because offline conversions "may well be delayed by days or even weeks"<sup class="cite"><a href="#ref-2">2</a></sup>. In a heavy-up the extra spend must be large enough to reach the MDE; in a go-dark the treated geos need enough current spend to withhold<sup class="cite"><a href="#ref-6">6</a></sup>.</p>
+          </li>
+          <li>
+            <h3>Size the holdout</h3>
+            <p>Standard GeoLifts usually need more than half of locations as controls. Inverse GeoLift holds out only the treatment group, reducing holdout size and opportunity cost "without losing testing accuracy". Its main assumption is that positive and negative effects are "interchangeable": only the sign of the effect would differ between a standard and an inverse test. Check that control geos with positive synthetic weights actually receive the media, or the effect is diluted<sup class="cite"><a href="#ref-6">6</a></sup>.</p>
+          </li>
+          <li>
+            <h3>Pre-register</h3>
+            <p>Write down market sets, donor pool, estimator, KPI, test window, cooldown, α and sidedness before launch. SC weights can be fixed before any post-period data exists<sup class="cite"><a href="#ref-12">12</a></sup>.</p>
+          </li>
+        </ol>
+
+        <div class="prose mt-l">
+          <div class="callout note">
+            <p class="callout-title">Why power is the hard part</p>
+            <p>Across 25 large ad experiments (about $2.8M of spend), the median ROI confidence interval was more than 100 percentage points wide. Individual sales had a coefficient of variation around 10, and informative tests "can easily require more than 10 million person-weeks"<sup class="cite"><a href="#ref-30">30</a></sup>. Geo aggregation smooths individual noise but leaves very few units, so the signal-to-noise problem stays central<sup class="cite"><a href="#ref-12">12</a></sup>.</p>
+          </div>
+          <div class="callout caveat">
+            <p class="callout-title"><span class="icon icon-warning" aria-hidden="true"></span>Cooldown length</p>
+            <p>GeoLift has a blog post on lagged effects, but its specific cooldown recommendations were not verified for this guide <span class="flag">unverified</span></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Diagnostics & inference -->
+    <section class="section on-mist" aria-labelledby="diagnostics">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Fit diagnostics &amp; inference</p>
+          <h2 class="headline" id="diagnostics" data-toc-label="Diagnostics">Trust the fit before you trust the lift.</h2>
+          <p class="lede">A counterfactual that cannot track the pre-period cannot be trusted in the test period. Check the fit first, then pick an inference method that matches the estimator. More detail in <a href="https://redam94.github.io/second-brain/Research/Econometrics/Identification-Strategies/Synthetic-Control-Inference-and-Diagnostics">Synthetic Control Inference and Diagnostics</a>.</p>
+        </div>
+
+        <ul class="checklist checklist-2 mt-m">
+          <li><strong>Visual fit and RMSPE</strong><span class="muted">Synthetic vs treated series over the pre-period<sup class="cite"><a href="#ref-29">29</a></sup>.</span></li>
+          <li><strong>Imbalance metrics</strong><span class="muted">GeoLift's scaled L2 runs from 0 (perfect fit) to 1 (no better than a simple average of controls)<sup class="cite"><a href="#ref-15">15</a></sup>.</span></li>
+          <li><strong>Predictor balance</strong><span class="muted">A large gap between the treated unit's predictors and the synthetic control's means interpolation bias<sup class="cite"><a href="#ref-12">12</a></sup>.</span></li>
+          <li><strong>Backdating (in-time placebo)</strong><span class="muted">Pretend the test started earlier; a credible model shows about zero "effect"<sup class="cite"><a href="#ref-29">29</a></sup>.</span></li>
+          <li><strong>Leave-one-out</strong><span class="muted">Drop each donor or geo in turn; the estimate should not hinge on one geo<sup class="cite"><a href="#ref-29">29</a></sup><sup class="cite"><a href="#ref-2">2</a></sup>.</span></li>
+          <li><strong>Placebo geos</strong><span class="muted">Run the analysis on untreated geos and expect a null<sup class="cite"><a href="#ref-26">26</a></sup>.</span></li>
+          <li><strong>GSC factor count</strong><span class="muted">Cross-validate the number of factors on held-out pre-periods<sup class="cite"><a href="#ref-17">17</a></sup>.</span></li>
+          <li><strong>DiD pre-trends</strong><span class="muted">Inspect event-study pre-trend coefficients, but do not pick the assumption by pre-test<sup class="cite"><a href="#ref-22">22</a></sup>.</span></li>
+        </ul>
+
+        <div class="table-scroll mt-l" role="region" aria-label="Inference options for geo tests" tabindex="0">
+          <table class="compare compare-wide">
+            <caption>Inference options</caption>
+            <thead>
+              <tr><th scope="col">Method</th><th scope="col">Idea</th><th scope="col">Where used</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">Placebo / permutation (in-space)</th><td>Assign "treatment" to each donor in turn and rank the treated unit's post/pre RMSPE ratio among the placebos; p is the share with a ratio at least as large. Units with poor pre-fit are often filtered out (for example, &gt;5× the treated unit's pre-RMSPE).</td><td>Canonical SC<sup class="cite"><a href="#ref-10">10</a></sup><sup class="cite"><a href="#ref-29">29</a></sup></td></tr>
+              <tr><th scope="row">Conformal inference</th><td>Test a hypothesized effect by refitting on all periods and permuting residuals over time; invert over a grid to get intervals.</td><td>Chernozhukov, Wüthrich &amp; Zhu<sup class="cite"><a href="#ref-31">31</a></sup>; GeoLift and augsynth defaults <span class="flag">secondary docs</span></td></tr>
+              <tr><th scope="row">Parametric bootstrap</th><td>Resample residuals and prediction errors from "fake treated" controls.</td><td>GSC<sup class="cite"><a href="#ref-16">16</a></sup><sup class="cite"><a href="#ref-17">17</a></sup></td></tr>
+              <tr><th scope="row">Multiplier bootstrap</th><td>Simultaneous confidence bands over ATT(g,t).</td><td>Callaway–Sant'Anna<sup class="cite"><a href="#ref-7">7</a></sup><sup class="cite"><a href="#ref-21">21</a></sup></td></tr>
+              <tr><th scope="row">Bayesian posterior</th><td>Posterior predictive counterfactual with credible intervals.</td><td>CausalImpact, Bayesian DiD<sup class="cite"><a href="#ref-24">24</a></sup><sup class="cite"><a href="#ref-23">23</a></sup></td></tr>
+              <tr><th scope="row">Regression / robust estimators</th><td>Weighted regression intervals; Trimmed Match for robust iROAS with paired geos.</td><td>GBR, Trimmed Match<sup class="cite"><a href="#ref-2">2</a></sup><sup class="cite"><a href="#ref-5">5</a></sup></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="prose mt-m">
+          <div class="callout caveat">
+            <p class="callout-title"><span class="icon icon-warning" aria-hidden="true"></span>Where the conformal default comes from</p>
+            <p>That GeoLift uses conformal inference by default comes from GeoLift reference pages and vignettes as surfaced by search (one vignette URL returned 404) and from a third-party replication. The method itself is established<sup class="cite"><a href="#ref-31">31</a></sup>; the implementation detail is secondary.</p>
+          </div>
+          <div class="callout tip">
+            <p class="callout-title">Narrow is not the same as right</p>
+            <p>In the CausalImpact geo example, the 95% interval was wider than a classical two-stage regression's (13–30% vs 19–22%), while the point estimates differed by less than 5%<sup class="cite"><a href="#ref-26">26</a></sup>. Prefer the interval whose assumptions you believe.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pitfalls -->
+    <section class="section on-light" aria-labelledby="pitfalls">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Pitfalls</p>
+          <h2 class="headline" id="pitfalls">Where geo tests go wrong.</h2>
+          <p class="lede">Three structural problems come with the territory. The rest are analysis habits you can fix.</p>
+        </div>
+
+        <div class="tiles tiles-3 mt-m">
+          <article class="tile on-mist">
+            <div class="tile-copy">
+              <span class="icon-badge tile-icon"><span class="icon icon-geo-pin" aria-hidden="true"></span></span>
+              <h3 class="tile-title">Spillover</h3>
+              <p class="tile-desc">Commuters, TV and radio signals and shipping addresses cross borders <span class="flag">practitioner knowledge</span> If treatment benefits donors, SC estimates are biased toward zero and become a <strong>lower bound</strong><sup class="cite"><a href="#ref-12">12</a></sup>. Use commuting zones or drop buffer geos along treated borders<sup class="cite"><a href="#ref-28">28</a></sup><sup class="cite"><a href="#ref-12">12</a></sup>.</p>
+            </div>
+          </article>
+          <article class="tile on-mist">
+            <div class="tile-copy">
+              <span class="icon-badge tile-icon"><span class="icon icon-layers" aria-hidden="true"></span></span>
+              <h3 class="tile-title">DMA granularity</h3>
+              <p class="tile-desc">Coarser units reduce spillover but leave fewer units<sup class="cite"><a href="#ref-2">2</a></sup>. Commuting zones "take the commuter effect into account"<sup class="cite"><a href="#ref-28">28</a></sup> <span class="flag">spillover link is an inference</span> Digital geo-targeting by IP is noisy <span class="flag">practitioner heuristic</span></p>
+            </div>
+          </article>
+          <article class="tile on-mist">
+            <div class="tile-copy">
+              <span class="icon-badge tile-icon"><span class="icon icon-target" aria-hidden="true"></span></span>
+              <h3 class="tile-title">Small N</h3>
+              <p class="tile-desc">Just over 210 geos in the US<sup class="cite"><a href="#ref-2">2</a></sup> means wide intervals. With fewer than about 5 donors, permutation inference is not meaningful, and many donors with few periods produce spurious fit<sup class="cite"><a href="#ref-12">12</a></sup>.</p>
+            </div>
+          </article>
+        </div>
+
+        <div class="prose mt-l">
+          <h3>Analysis habits to avoid</h3>
+          <ol>
+            <li><strong>Reporting an underpowered test as "no effect".</strong> Simulate power before launch and report the interval, not just significance<sup class="cite"><a href="#ref-30">30</a></sup><sup class="cite"><a href="#ref-15">15</a></sup>.</li>
+            <li><strong>TWFE on staggered rollouts.</strong> Use Callaway–Sant'Anna, Sun &amp; Abraham or another heterogeneity-robust estimator<sup class="cite"><a href="#ref-20">20</a></sup><sup class="cite"><a href="#ref-7">7</a></sup>.</li>
+            <li><strong>Overfitting the pre-period.</strong> Many donors and few periods produce spurious fit; check with backdating and leave-one-out<sup class="cite"><a href="#ref-12">12</a></sup><sup class="cite"><a href="#ref-29">29</a></sup>.</li>
+            <li><strong>Contaminated donors.</strong> Neighbours or geos with concurrent campaigns left in the control pool<sup class="cite"><a href="#ref-12">12</a></sup>.</li>
+            <li><strong>Short post-period with lagged effects.</strong> Include a cooldown<sup class="cite"><a href="#ref-2">2</a></sup>.</li>
+            <li><strong>Changing the design after seeing results.</strong> Pre-register<sup class="cite"><a href="#ref-12">12</a></sup>.</li>
+            <li><strong>Ignoring substitution.</strong> Paid traffic may be cannibalizing organic traffic<sup class="cite"><a href="#ref-8">8</a></sup>.</li>
+            <li><strong>Falling back on observational attribution.</strong> In one activity-bias study, regression gave about 1198% "lift" against an RCT truth of 5.4%<sup class="cite"><a href="#ref-32">32</a></sup>, and observational methods often failed to recover Facebook RCT effects<sup class="cite"><a href="#ref-33">33</a></sup>.</li>
+            <li><strong>Ignoring anticipation.</strong> If behaviour shifts before launch, for example after a pre-announcement, backdate the intervention date<sup class="cite"><a href="#ref-12">12</a></sup><sup class="cite"><a href="#ref-29">29</a></sup>.</li>
+          </ol>
+          <div class="callout caveat">
+            <p class="callout-title"><span class="icon icon-warning" aria-hidden="true"></span>Check your aggregation choice</p>
+            <p>A third-party replication reported that GeoLift's conformal p-value changes when treated outcomes are summed rather than averaged (p ≈ 0.68 vs ≈ 0.01). This has not been verified against Meta's own documentation <span class="flag">unverified</span> Treat it as a reason to check how your tool aggregates treated geos.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Worked example -->
+    <section class="section on-mist" aria-labelledby="example">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Worked example</p>
+          <h2 class="headline" id="example" data-toc-label="Example">A search campaign across 190 DMAs.</h2>
+          <p class="lede">The CausalImpact paper's own application is a randomized geo experiment. It shows the whole workflow: design, counterfactual, robustness checks and an honest reading of the interval. Summary from the author's note <a href="https://redam94.github.io/second-brain/Research/Bayesian-Statistics/Causal-Inference/Time-Series-Causal-Inference/CausalImpact-Empirical-Application">CausalImpact Empirical Application</a><sup class="cite"><a href="#ref-26">26</a></sup>.</p>
+        </div>
+
+        <ul class="stats mt-m">
+          <li class="stat"><span class="stat-value">95 / 190</span><span class="stat-label">DMAs randomized to the treatment group</span><span class="stat-note">Brodersen et al.<sup class="cite"><a href="#ref-26">26</a></sup></span></li>
+          <li class="stat"><span class="stat-value">22%</span><span class="stat-label">Cumulative lift, 95% interval 13% to 30%</span><span class="stat-note">Randomized controls<sup class="cite"><a href="#ref-26">26</a></sup></span></li>
+          <li class="stat"><span class="stat-value">2%</span><span class="stat-label">Placebo "effect" on untreated DMAs, interval −6% to 10%</span><span class="stat-note">Placebo test<sup class="cite"><a href="#ref-26">26</a></sup></span></li>
+        </ul>
+
+        <ol class="steps steps-vertical mt-l">
+          <li>
+            <h3>Design</h3>
+            <p>A 6-week search campaign ran in 95 of 190 DMAs, assigned at random. About a year of pre-period data sat behind it<sup class="cite"><a href="#ref-26">26</a></sup>.</p>
+          </li>
+          <li>
+            <h3>Counterfactual</h3>
+            <p>The KPI was search-related visits to the advertiser's site (organic plus paid clicks). For this application the model used a local level plus a static regression on the control series, with a spike-and-slab prior choosing which controls to use. The post-period counterfactual was drawn from the posterior<sup class="cite"><a href="#ref-26">26</a></sup>. The general CausalImpact model can also add trend and seasonality components<sup class="cite"><a href="#ref-24">24</a></sup><sup class="cite"><a href="#ref-25">25</a></sup>.</p>
+          </li>
+          <li>
+            <h3>Result</h3>
+            <p>With the randomized control DMAs as controls, the cumulative lift was about 88,400 additional clicks, or <strong>22% [13%, 30%]</strong>. The effect peaked about 3 weeks into the campaign and faded about a week after it ended<sup class="cite"><a href="#ref-26">26</a></sup>.</p>
+          </li>
+          <li>
+            <h3>Robustness</h3>
+            <p>Swapping the randomized controls for purely observational ones (Google Trends search volume for the advertiser's industry) gave 21% [12%, 30%]. Running the same analysis on untreated DMAs gave a placebo of 2% [−6%, 10%], an interval that comfortably covers zero<sup class="cite"><a href="#ref-26">26</a></sup>.</p>
+          </li>
+          <li>
+            <h3>Reading the interval</h3>
+            <p>A classical two-stage regression (Vaver &amp; Koehler's approach) produced a much narrower interval (19–22%), and CausalImpact's point estimate differed from it by less than 5%<sup class="cite"><a href="#ref-26">26</a></sup>. The author's note reads the wider interval as an honest account of posterior uncertainty: narrower is not automatically better.</p>
+          </li>
+        </ol>
+
+        <div class="prose mt-l">
+          <div class="callout caveat">
+            <p class="callout-title"><span class="icon icon-warning" aria-hidden="true"></span>One case study</p>
+            <p>The close agreement between randomized and observational controls is a single case. It does not show that observational controls will work in general; randomize the geos when you can.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Next -->
+    <section class="section on-dark" aria-labelledby="next">
+      <div class="wrap">
+        <div class="section-head center">
+          <p class="eyebrow">Keep going</p>
+          <h2 class="headline" id="next" data-toc-skip>See how it stacks up.</h2>
+          <p class="lede">Compare geo tests with user-level tests, or turn this into a test plan.</p>
+        </div>
+        <div class="actions center mt-m">
+          <a class="btn" href="compare.html">Compare designs</a>
+          <a class="btn btn-ghost" href="planning.html">Plan a test</a>
+          <a class="link" href="user-level-testing.html">User-level testing</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section on-light" aria-labelledby="sources">
+      <div class="wrap">
+        <div class="section-head">
+          <h2 class="headline" id="sources">Sources &amp; further reading</h2>
+          <p class="lede">External sources and the author's <a href="https://redam94.github.io/second-brain/">second-brain notes</a>, numbered in order of first use. See the site-wide <a href="sources.html">sources page</a> for everything.</p>
+        </div>
+        <ol class="refs mt-m">
+          <li id="ref-1"><a class="ref-title" href="https://research.google/pubs/measuring-ad-effectiveness-using-geo-experiments/">Measuring Ad Effectiveness Using Geo Experiments</a> <span class="ref-meta">Vaver &amp; Koehler (2011), Google Research</span><span class="ref-supports">randomized geo design and its rationale.</span></li>
+          <li id="ref-2"><a class="ref-title" href="https://www.unofficialgoogledatascience.com/2016/06/estimating-causal-effects-using-geo.html">Estimating causal effects using geo experiments</a> <span class="ref-meta">Unofficial Google Data Science blog (2016)</span><span class="ref-supports">GBR, 1/volume weighting, 30+ geos, over 210 US geos, pre-period and test length, cooldown, iROAS, stratification, dominant markets, leave-one-out, CI-width targets.</span></li>
+          <li id="ref-3"><a class="ref-title" href="https://research.google/pubs/estimating-ad-effectiveness-using-geo-experiments-in-a-time-based-regression-framework/">Estimating Ad Effectiveness using Geo Experiments in a Time-Based Regression Framework</a> <span class="ref-meta">Kerman, Wang &amp; Vaver (2017), Google Research</span><span class="ref-supports">TBR for few geos and 1-vs-1 matched markets; cumulative effect.</span></li>
+          <li id="ref-4"><a class="ref-title" href="https://research.google/pubs/pub48983/">A Time-Based Regression Matched Markets Approach for Designing Geo Experiments</a> <span class="ref-meta">Google Research</span><span class="ref-supports">matched-markets design.</span></li>
+          <li id="ref-5"><a class="ref-title" href="https://github.com/google/trimmed_match">google/trimmed_match</a> <span class="ref-meta">Google, GitHub (Chen &amp; Au 2019; Chen, Longfils &amp; Remy 2021)</span><span class="ref-supports">paired randomized geo design and robust iROAS.</span></li>
+          <li id="ref-6"><a class="ref-title" href="https://facebookincubator.github.io/GeoLift/blog/inverse-geolift">Inverse GeoLift</a> <span class="ref-meta">Meta, GeoLift blog</span><span class="ref-supports">go-dark/holdout design, holdout sizing, opportunity cost, MMM calibration caveat.</span></li>
+          <li id="ref-7"><a class="ref-title" href="https://doi.org/10.1016/j.jeconom.2020.12.001">Difference-in-Differences with multiple time periods</a> <span class="ref-meta">Callaway &amp; Sant'Anna (2021), Journal of Econometrics</span><span class="ref-supports">staggered DiD, ATT(g,t), aggregation, multiplier bootstrap.</span></li>
+          <li id="ref-8"><a class="ref-title" href="https://doi.org/10.3982/ECTA12423">Consumer Heterogeneity and Paid Search Effectiveness</a> <span class="ref-meta">Blake, Nosko &amp; Tadelis (2015), Econometrica</span><span class="ref-supports">eBay 68-DMA, 60-day go-dark; organic substitution.</span></li>
+          <li id="ref-9"><a class="ref-title" href="https://github.com/google/matched_markets">google/matched_markets</a> <span class="ref-meta">Google, GitHub</span><span class="ref-supports">TBR analysis and TBRMM greedy design search under constraints.</span></li>
+          <li id="ref-10"><a class="ref-title" href="https://doi.org/10.1198/jasa.2009.ap08746">Synthetic Control Methods for Comparative Case Studies</a> <span class="ref-meta">Abadie, Diamond &amp; Hainmueller (2010), JASA</span><span class="ref-supports">synthetic control and placebo/permutation inference.</span></li>
+          <li id="ref-11"><a class="ref-title" href="https://doi.org/10.1257/jel.20191450">Using Synthetic Controls: Feasibility, Data Requirements, and Methodological Aspects</a> <span class="ref-meta">Abadie (2021), Journal of Economic Literature</span><span class="ref-supports">SC requirements, diagnostics and extensions.</span></li>
+          <li id="ref-12"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Econometrics/Identification-Strategies/Synthetic-Control-Requirements">Synthetic Control Requirements</a> <span class="ref-meta">Author's note (summarizing Abadie 2021)</span><span class="ref-supports">effect size vs volatility, pre-period and stability, donor pool, convex hull, fewer than 5 donors, spillover lower bound, anticipation, pre-registration.</span></li>
+          <li id="ref-13"><a class="ref-title" href="https://doi.org/10.1080/01621459.2021.1929245">The Augmented Synthetic Control Method</a> <span class="ref-meta">Ben-Michael, Feller &amp; Rothstein (2021), JASA</span><span class="ref-supports">ASCM bias correction.</span></li>
+          <li id="ref-14"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Econometrics/Identification-Strategies/Synthetic-Control-Extensions">Synthetic Control Extensions</a> <span class="ref-meta">Author's note</span><span class="ref-supports">penalized and augmented SC.</span></li>
+          <li id="ref-15"><a class="ref-title" href="https://facebookincubator.github.io/GeoLift/docs/GettingStarted/Walkthrough">GeoLift Walkthrough</a> <span class="ref-meta">Meta, GeoLift documentation</span><span class="ref-supports">data schema, market-selection power simulation, model options, L2 imbalance, lookback re-checks.</span></li>
+          <li id="ref-16"><a class="ref-title" href="https://doi.org/10.1017/pan.2016.2">Generalized Synthetic Control Method</a> <span class="ref-meta">Xu (2017), Political Analysis</span><span class="ref-supports">GSC / interactive fixed effects and bootstrap inference.</span></li>
+          <li id="ref-17"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Econometrics/Identification-Strategies/Generalized-Synthetic-Control-Method">Generalized Synthetic Control Method</a> <span class="ref-meta">Author's note</span><span class="ref-supports">IFE model, factor cross-validation, bootstrap, large control pool and long pre-period.</span></li>
+          <li id="ref-18"><a class="ref-title" href="https://doi.org/10.1257/aer.20190159">Synthetic Difference-in-Differences</a> <span class="ref-meta">Arkhangelsky et al. (2021), American Economic Review</span><span class="ref-supports">SDID as a hybrid of SC and DiD.</span></li>
+          <li id="ref-19"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Econometrics/Identification-Strategies/Differences-in-Differences">Differences-in-Differences</a> <span class="ref-meta">Author's note</span><span class="ref-supports">parallel trends.</span></li>
+          <li id="ref-20"><a class="ref-title" href="https://doi.org/10.1016/j.jeconom.2021.03.014">Difference-in-differences with variation in treatment timing</a> <span class="ref-meta">Goodman-Bacon (2021), Journal of Econometrics</span><span class="ref-supports">the TWFE negative-weights problem.</span></li>
+          <li id="ref-21"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Econometrics/Difference-in-Differences/Difference-in-Differences-with-Multiple-Time-Periods---Overview">DiD with Multiple Time Periods: Overview</a> <span class="ref-meta">Author's note</span><span class="ref-supports">TWFE critique; minimum-wage example (−3.1% vs a TWFE null).</span></li>
+          <li id="ref-22"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Econometrics/Difference-in-Differences/Identifying-Assumptions-for-Staggered-DiD">Identifying Assumptions for Staggered DiD</a> <span class="ref-meta">Author's note</span><span class="ref-supports">anticipation, never-treated vs not-yet-treated comparisons, no pre-testing.</span></li>
+          <li id="ref-23"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Econometrics/Identification-Strategies/Bayesian-Difference-in-Differences">Bayesian Difference in Differences</a> <span class="ref-meta">Author's note</span><span class="ref-supports">PyMC model and counterfactual draws.</span></li>
+          <li id="ref-24"><a class="ref-title" href="https://doi.org/10.1214/14-AOAS788">Inferring causal impact using Bayesian structural time-series models</a> <span class="ref-meta">Brodersen et al. (2015), Annals of Applied Statistics</span><span class="ref-supports">CausalImpact / BSTS method.</span></li>
+          <li id="ref-25"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Bayesian-Statistics/Causal-Inference/Time-Series-Causal-Inference/Brodersen-2015---Overview">Brodersen 2015: Overview</a> <span class="ref-meta">Author's note</span><span class="ref-supports">BSTS components; DiD and SC as special cases.</span></li>
+          <li id="ref-26"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Bayesian-Statistics/Causal-Inference/Time-Series-Causal-Inference/CausalImpact-Empirical-Application">CausalImpact Empirical Application</a> <span class="ref-meta">Author's note</span><span class="ref-supports">95 of 190 DMAs, 6 weeks, 22% [13%, 30%], observational 21%, placebo 2%, interval comparison.</span><span class="ref-caveat"><span class="flag">single case</span> The agreement between randomized and observational controls is one case study.</span></li>
+          <li id="ref-27"><a class="ref-title" href="https://facebookincubator.github.io/GeoLift/docs/Best%20Practices/BestPractices">GeoLift Best Practices</a> <span class="ref-meta">Meta, GeoLift documentation</span><span class="ref-supports">pre-period 4–5× test length, ≥25 periods, ≥20 geos, 52 weeks of history, daily data, at least one purchase cycle, minimum duration, holding other media constant.</span></li>
+          <li id="ref-28"><a class="ref-title" href="https://facebookincubator.github.io/GeoLift/docs/GettingStarted/Incorporating_CommutingZones">GeoLift: Incorporating Commuting Zones</a> <span class="ref-meta">Meta, GeoLift documentation</span><span class="ref-supports">commuting zones to account for the commuter effect.</span><span class="ref-caveat"><span class="flag">inference</span> The link to spillover control is this guide's inference, not the source's claim.</span></li>
+          <li id="ref-29"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Econometrics/Identification-Strategies/Synthetic-Control-Inference-and-Diagnostics">Synthetic Control Inference and Diagnostics</a> <span class="ref-meta">Author's note</span><span class="ref-supports">RMSPE ratio, permutation p-values, pre-fit filtering, one-sided tests, backdating, leave-one-out.</span></li>
+          <li id="ref-30"><a class="ref-title" href="https://doi.org/10.1093/qje/qjv023">The Unfavorable Economics of Measuring the Returns to Advertising</a> <span class="ref-meta">Lewis &amp; Rao (2015), Quarterly Journal of Economics</span><span class="ref-supports">25 experiments, about $2.8M, median ROI CI over 100 pp, CV ≈ 10, 10M+ person-weeks.</span></li>
+          <li id="ref-31"><a class="ref-title" href="https://doi.org/10.1080/01621459.2021.1920957">An Exact and Robust Conformal Inference Method for Counterfactual and Synthetic Controls</a> <span class="ref-meta">Chernozhukov, Wüthrich &amp; Zhu (2021), JASA</span><span class="ref-supports">conformal inference.</span></li>
+          <li id="ref-32"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Research-Methodology/Observational-vs-Experimental-Methods-in-Advertising">Observational vs Experimental Methods in Advertising</a> <span class="ref-meta">Author's note</span><span class="ref-supports">1198% observational "lift" vs 5.4% RCT.</span></li>
+          <li id="ref-33"><a class="ref-title" href="https://doi.org/10.1287/mksc.2018.1135">A Comparison of Approaches to Advertising Measurement: Evidence from Big Field Experiments at Facebook</a> <span class="ref-meta">Gordon et al. (2019), Marketing Science</span><span class="ref-supports">observational methods often fail to recover RCT effects.</span></li>
+        </ol>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer on-dark">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <p class="footer-brand">Geo vs User-Level Testing</p>
+          <p class="footer-about">A practitioner guide to media incrementality testing and the measurement methods around it, built on the author's <a href="https://redam94.github.io/second-brain/">second-brain notes</a>.</p>
+        </div>
+        <div>
+          <h2>Guide</h2>
+          <ul>
+            <li><a href="index.html">Overview</a></li>
+            <li><a href="geo-testing.html">Geo testing</a></li>
+            <li><a href="user-level-testing.html">User-level testing</a></li>
+            <li><a href="compare.html">Compare</a></li>
+            <li><a href="planning.html">Planning</a></li>
+            <li><a href="other-methods.html">Other methods</a></li>
+            <li><a href="sources.html">Sources</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>From the notes</h2>
+          <ul>
+            <li><a href="https://redam94.github.io/second-brain/Research/Econometrics/Foundations/The-Experimental-Ideal">The Experimental Ideal</a></li>
+            <li><a href="https://redam94.github.io/second-brain/Research/Econometrics/Identification-Strategies/Synthetic-Control-Requirements">Synthetic Control Requirements</a></li>
+            <li><a href="https://redam94.github.io/second-brain/Research/Research-Methodology/Experimental-Design/Power-Analysis-and-Sample-Size">Power Analysis and Sample Size</a></li>
+            <li><a href="https://redam94.github.io/second-brain/Research/Market-Response-Models/Bayesian-Media-Mix-Modeling/Bayesian-Media-Mix-Modeling---Overview">Bayesian Media Mix Modeling</a></li>
+            <li><a href="https://redam94.github.io/second-brain/">Second brain home</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-base">
+        <p>Illustrations and icons generated with fal. Sources are cited inline on every page.</p>
+        <p><a href="https://redam94.github.io/">redam94.github.io</a></p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,10 @@
+<svg viewBox="0 0 816 816" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+  <g id="checklist" fill="none" stroke="#606d3d" stroke-width="44" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M170 264 L205 296 L283 220" />
+    <path d="M354 264 H646" />
+    <path d="M170 414 L205 446 L283 370" />
+    <path d="M354 414 H646" />
+    <path d="M170 564 L205 596 L283 520" />
+    <path d="M354 564 H646" />
+  </g>
+</svg>

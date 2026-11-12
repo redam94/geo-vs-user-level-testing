@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Other methods · Geo vs User-Level Testing</title>
+  <meta name="description" content="How MMM, multi-touch attribution, CausalImpact, synthetic control and response benchmarks relate to lift tests, and how to combine them into one measurement loop.">
+  <meta name="theme-color" content="#000000">
+  <meta name="color-scheme" content="light">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Geo vs User-Level Testing">
+  <meta property="og:title" content="Other methods · Geo vs User-Level Testing">
+  <meta property="og:description" content="How MMM, multi-touch attribution, CausalImpact, synthetic control and response benchmarks relate to lift tests, and how to combine them into one measurement loop.">
+  <meta property="og:url" content="https://redam94.github.io/geo-vs-user-level-testing/other-methods.html">
+  <meta property="og:image" content="https://redam94.github.io/geo-vs-user-level-testing/assets/img/hero.webp">
+  <meta property="og:image:alt" content="A minimal 3D map of U.S. regions, some highlighted olive as test markets, dissolving into a grid of individual dots representing people.">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/svg+xml" href="assets/icons/split.svg">
+  <link rel="stylesheet" href="assets/css/site.css">
+  <script src="assets/js/site.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="nav">
+    <div class="nav-inner">
+      <a class="nav-brand" href="index.html"><span class="icon icon-split" aria-hidden="true"></span>Geo vs User Testing</a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu"><span class="nav-toggle-bars" aria-hidden="true"></span><span class="sr-only">Menu</span></button>
+      <nav class="nav-menu" id="nav-menu" aria-label="Primary">
+        <ul class="nav-links">
+          <li><a href="index.html">Overview</a></li>
+          <li><a href="geo-testing.html">Geo testing</a></li>
+          <li><a href="user-level-testing.html">User-level testing</a></li>
+          <li><a href="compare.html">Compare</a></li>
+          <li><a href="planning.html">Planning</a></li>
+          <li><a href="other-methods.html" aria-current="page">Other methods</a></li>
+          <li><a href="sources.html">Sources</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- Sub-hero -->
+    <section class="subhero on-dark" aria-labelledby="page-title">
+      <div class="wrap">
+        <span class="icon-badge"><span class="icon icon-layers" aria-hidden="true"></span></span>
+        <p class="eyebrow">Beyond the lift test</p>
+        <h1 class="subhero-title" id="page-title">The methods around the test.</h1>
+        <p class="subhero-lede">Media mix models, attribution, quasi-experiments and response benchmarks each answer a different question. This page shows what each one can and cannot tell you, and how lift tests tie them together.</p>
+        <div class="meta"><span>Bayesian MMM</span><span>Multi-touch attribution</span><span>CausalImpact &amp; synthetic control</span><span>Triangulation</span></div>
+        <div class="subhero-media">
+          <img src="assets/img/methods.webp" width="1000" height="671" alt="Layered translucent bands like a stacked area chart beneath a dark saturation curve that rises and levels off.">
+        </div>
+      </div>
+    </section>
+
+    <!-- TOC -->
+    <div class="toc-band on-light">
+      <div class="wrap">
+        <nav class="toc" data-toc aria-label="On this page"></nav>
+      </div>
+    </div>
+
+    <!-- 1. Observational vs experimental -->
+    <section class="section on-mist" aria-labelledby="evidence">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">The big picture</p>
+          <h2 class="headline" id="evidence" data-toc-label="Evidence types">Observational vs experimental evidence.</h2>
+          <p class="lede">Every measurement method builds a counterfactual. The difference that matters is how: by randomizing, or by inferring it from data nobody randomized.</p>
+        </div>
+
+        <div class="split mt-m">
+          <div class="prose">
+            <p><strong>Experiments</strong> (user-level RCTs, ghost ads, conversion lift, geo experiments) create the counterfactual by randomization: the control group shows what would have happened without the ads. <strong>Observational methods</strong> (MMM, MTA, matching, regression on logs) infer it from correlations, and are causal only when their identifying assumptions hold.</p>
+            <p>In advertising, the evidence that this distinction matters is unusually strong. Users who see an ad are more active online that day anyway, so exposed-vs-unexposed comparisons credit the ad with that extra activity. This is <a href="https://redam94.github.io/second-brain/Research/Research-Methodology/Activity-Bias-in-Advertising">activity bias</a>, and observational estimates land far above the RCT benchmark even with rich controls<sup class="cite"><a href="#ref-1">1</a></sup><sup class="cite"><a href="#ref-2">2</a></sup>. In the study the note summarizes, the RCT showed a 5.4% increase in brand-related searches, while observational estimates ran from 1198% with no controls to 872% with all controls<sup class="cite"><a href="#ref-1">1</a></sup>.</p>
+            <p>Gordon, Zettelmeyer, Bhargava &amp; Chapsky compared commonly used observational methods with 15 large Facebook RCTs (about 500M user-experiment observations and 1.6B impressions). The methods "often fail to accurately measure the true effect"<sup class="cite"><a href="#ref-3">3</a></sup>.</p>
+          </div>
+          <div class="callout note">
+            <p class="callout-title">Experiments are hard too</p>
+            <p>Across 25 large digital-ad RCTs, individual sales were so noisy relative to per-person ad cost that the median ROI confidence interval was more than 100 percentage points wide. Informative experiments can need more than 10M person-weeks<sup class="cite"><a href="#ref-5">5</a></sup>. Unbiased does not mean precise.</p>
+          </div>
+        </div>
+
+        <ul class="stats mt-l">
+          <li class="stat">
+            <span class="stat-value">83 / 58 / 24%</span>
+            <span class="stat-label">Median lift estimated by double/debiased ML for upper, mid and lower funnel outcomes, against median RCT lifts of 29 / 18 / 5%, in 663 Facebook experiments with 5,000+ user features</span>
+            <span class="stat-note">Gordon, Moakler &amp; Zettelmeyer (2023)<sup class="cite"><a href="#ref-4">4</a></sup></span>
+          </li>
+          <li class="stat">
+            <span class="stat-value">173 / 176 / 64%</span>
+            <span class="stat-label">Median lift estimated by stratified propensity-score matching on the same experiments and funnel stages</span>
+            <span class="stat-note">Gordon, Moakler &amp; Zettelmeyer (2023)<sup class="cite"><a href="#ref-4">4</a></sup></span>
+          </li>
+          <li class="stat">
+            <span class="stat-value">&gt;100 pp</span>
+            <span class="stat-label">Median width of the ROI confidence interval across 25 large ad experiments</span>
+            <span class="stat-note">Lewis &amp; Rao (2015)<sup class="cite"><a href="#ref-5">5</a></sup></span>
+          </li>
+        </ul>
+
+        <div class="prose mt-l">
+          <div class="callout tip">
+            <p class="callout-title">Practitioner takeaway</p>
+            <p>Experiments are the most credible evidence available, but they are expensive, narrow and noisy. Observational models are cheap, broad and continuous, but biased in ways that are hard to see. Modern measurement combines both: <strong>experiments calibrate models, and models generalize experiments.</strong></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. MMM: specification, adstock, saturation -->
+    <section class="section on-light" aria-labelledby="mmm">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Media mix modeling</p>
+          <h2 class="headline" id="mmm" data-toc-label="Bayesian MMM">Bayesian MMM: carryover and diminishing returns.</h2>
+          <p class="lede">An MMM regresses aggregate outcomes on media by channel, plus controls, to answer two questions: how much did each channel contribute, and how should the budget move?</p>
+        </div>
+
+        <div class="prose mt-m">
+          <p>The model uses weekly or monthly sales, national or by geo, against spend or exposure per channel and controls such as price, distribution, promotions, seasonality and macro factors<sup class="cite"><a href="#ref-6">6</a></sup>. The canonical Bayesian specification from <a href="https://research.google/pubs/bayesian-methods-for-media-mix-modeling-with-carryover-and-shape-effects/">Jin, Wang, Sun, Chan &amp; Koehler (Google, 2017)</a> is<sup class="cite"><a href="#ref-7">7</a></sup>:</p>
+          <p><code>y<sub>t</sub> = τ + Σ<sub>m</sub> β<sub>m</sub> · Hill(adstock(x<sub>t−L+1..t, m</sub>); K<sub>m</sub>, S<sub>m</sub>) + Σ<sub>c</sub> γ<sub>c</sub> z<sub>t,c</sub> + ε<sub>t</sub></code></p>
+          <p>Media effects are additive, so channels do not interact, and adstock is applied before saturation<sup class="cite"><a href="#ref-6">6</a></sup>.</p>
+
+          <h3>Adstock: advertising keeps working after exposure</h3>
+          <p>Carryover comes from delayed response, purchase cycles and word of mouth. The <a href="https://redam94.github.io/second-brain/Research/Market-Response-Models/Bayesian-Media-Mix-Modeling/Carryover-(Adstock)-Functional-Forms">common functional forms</a><sup class="cite"><a href="#ref-8">8</a></sup>:</p>
+          <ul>
+            <li><strong>Geometric adstock</strong> weights lag <em>l</em> by α<sup>l</sup> with retention 0 &lt; α &lt; 1. The effect peaks in the exposure week and decays. It is the marketing analogue of the Koyck distributed lag.</li>
+            <li><strong>Delayed (peak) adstock</strong> weights by α<sup>(l−θ)²</sup>, peaking θ periods after exposure. Useful for brand TV. Jin et al. use L = 13 weeks as the maximum lag.</li>
+            <li><strong>Weibull CDF/PDF adstock</strong> in Robyn. The PDF form allows a lagged peak and is recommended for longer conversion windows<sup class="cite"><a href="#ref-9">9</a></sup>.</li>
+          </ul>
+          <p>Benchmarks from the market-response literature: the long-run ad effect is roughly double the short-run effect, and about 90% of the effect for mature packaged goods dissipates within 6–9 months<sup class="cite"><a href="#ref-10">10</a></sup>.</p>
+
+          <h3>Saturation: the shape of diminishing returns</h3>
+          <p>The <a href="https://redam94.github.io/second-brain/Research/Market-Response-Models/Bayesian-Media-Mix-Modeling/Shape-(Saturation)-Effects">Hill function</a> 1 / (1 + (x/K)<sup>−S</sup>) has half-saturation point K and shape S. S &gt; 1 gives an S-curve and S ≤ 1 a concave curve. The reach transform fixes S = 1 and is more parsimonious<sup class="cite"><a href="#ref-11">11</a></sup>.</p>
+          <div class="callout caveat">
+            <p class="callout-title"><span class="icon icon-warning" aria-hidden="true"></span>Identifiability: do not extrapolate</p>
+            <p>Very different (K, S, β) triples can produce almost the same curve over the observed spend range. The curve is estimable inside the data range. The individual parameters, and any extrapolation beyond observed spend, are not<sup class="cite"><a href="#ref-11">11</a></sup>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Priors -->
+    <section class="section on-mist" aria-labelledby="priors">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Bayesian estimation</p>
+          <h2 class="headline" id="priors" data-toc-label="Priors">Priors do a lot of the work.</h2>
+          <p class="lede">Adstock and Hill transforms make the model nonlinear, and one MMM dataset carries little information relative to its parameter count. Priors fill the gap, for better or worse.</p>
+        </div>
+
+        <div class="split mt-m">
+          <div class="prose">
+            <p>Bayesian MCMC lets prior knowledge fill the information gap<sup class="cite"><a href="#ref-12">12</a></sup>. <a href="https://redam94.github.io/second-brain/Research/Market-Response-Models/Bayesian-Media-Mix-Modeling/Bayesian-Estimation-and-Priors-for-MMM">Typical priors</a> are:</p>
+            <ul>
+              <li>beta or uniform for the retention rate α;</li>
+              <li>uniform for the peak delay θ;</li>
+              <li>gamma for the shape S;</li>
+              <li>beta over the observed range for the half-saturation K;</li>
+              <li>half-normal (non-negative) for the media coefficient β.</li>
+            </ul>
+            <p>Chan &amp; Perry (Google, 2017) frame MMM challenges as data limitations, selection bias and modeling, and note that MMM estimates are correlational and causal only under narrow conditions<sup class="cite"><a href="#ref-14">14</a></sup>.</p>
+          </div>
+          <div class="callout caveat">
+            <p class="callout-title"><span class="icon icon-warning" aria-hidden="true"></span>Prior dominance</p>
+            <p>In simulations with two years of weekly data, saturation curves were underestimated by about 18–33% at a reference spend level. With sixty years of data the curves were close to unbiased. The posterior can look almost like the prior, and there is "no universally correct prior"<sup class="cite"><a href="#ref-12">12</a></sup><sup class="cite"><a href="#ref-13">13</a></sup>.</p>
+            <p>More history is not the practical fix, because markets drift. Better options are pooling across brands or geos (hierarchical models) and <strong>informative priors from experiments</strong><sup class="cite"><a href="#ref-12">12</a></sup>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. ROAS vs mROAS -->
+    <section class="section on-light" aria-labelledby="roas">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Budget decisions</p>
+          <h2 class="headline" id="roas" data-toc-label="ROAS vs mROAS">ROAS tells you the average. mROAS tells you where to move money.</h2>
+        </div>
+
+        <dl class="deflist mt-m">
+          <div><dt>ROAS<sub>m</sub></dt><dd>Incremental revenue from channel m divided by its spend. Computed by setting the channel's spend to zero over a change period and summing predicted differences through the carryover tail (t<sub>1</sub> + L − 1)<sup class="cite"><a href="#ref-15">15</a></sup>.</dd></div>
+          <div><dt>mROAS<sub>m</sub></dt><dd>Revenue from one more unit of spend. Jin et al. use a +1% spend perturbation<sup class="cite"><a href="#ref-15">15</a></sup>. A high-ROAS channel may already be saturated, so reallocation should follow mROAS, not ROAS <span class="flag">practitioner framing</span></dd></div>
+        </dl>
+
+        <div class="prose mt-m">
+          <div class="callout danger">
+            <p class="callout-title">Pitfall: plugging in posterior means</p>
+            <p>Compute ROAS and mROAS <strong>per posterior draw</strong>, then summarize. Plugging posterior-mean parameters into the formulas ignores their correlations and is wrong<sup class="cite"><a href="#ref-15">15</a></sup>.</p>
+          </div>
+          <div class="callout caveat">
+            <p class="callout-title"><span class="icon icon-warning" aria-hidden="true"></span>The optimal mix can be untrustworthy</p>
+            <p>The posterior of the optimal mix can be multimodal and very wide. In the shampoo case study (2.5 years of weekly data, 5 channels), the TV/magazine optimum was bimodal at the extremes, and the authors concluded the recommended allocation was not trustworthy where it extrapolates<sup class="cite"><a href="#ref-15">15</a></sup><sup class="cite"><a href="#ref-13">13</a></sup>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Data, tools, pros/cons -->
+    <section class="section on-mist" aria-labelledby="mmm-practice">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">MMM in practice</p>
+          <h2 class="headline" id="mmm-practice" data-toc-label="MMM data &amp; tools">Data, tools and trade-offs.</h2>
+          <p class="lede">MMM needs aggregate data and no identity, which makes it privacy-durable. It needs variation in spend, which always-on budgets often lack.</p>
+        </div>
+
+        <table class="compare mt-m">
+          <caption>Typical MMM data requirements</caption>
+          <thead>
+            <tr><th scope="col">Dimension</th><th scope="col">Typical requirement</th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">Granularity</th><td data-label="Typical requirement">Weekly (sometimes daily). National, or geo-level (DMA or region) for more variation and hierarchical pooling<sup class="cite"><a href="#ref-6">6</a></sup>.</td></tr>
+            <tr><th scope="row">History</th><td data-label="Typical requirement">Usually 2–3 years of weekly data. The Jin et al. case used about 2.5 years (n = 106 weeks). More is not always better because of non-stationarity<sup class="cite"><a href="#ref-13">13</a></sup>.</td></tr>
+            <tr><th scope="row">Media inputs</th><td data-label="Typical requirement">Spend and/or impressions, GRPs or reach by channel. Spend must vary: flat, always-on spend is unidentifiable <span class="flag">practitioner heuristic</span></td></tr>
+            <tr><th scope="row">Controls</th><td data-label="Typical requirement">Price, promotion, distribution, seasonality, holidays, competitor activity, macro factors. Highly correlated controls can need orthogonalization: in the case study, STAN runtime fell from 3,040 s to 75 s<sup class="cite"><a href="#ref-13">13</a></sup>.</td></tr>
+            <tr><th scope="row">KPI</th><td data-label="Typical requirement">Sales, revenue, conversions or volume, defined consistently over time.</td></tr>
+            <tr><th scope="row">Identity</th><td data-label="Typical requirement">None. Aggregate data needs no cookies or device IDs.</td></tr>
+          </tbody>
+        </table>
+
+        <h3 class="subhead mt-l">Open-source tools</h3>
+        <div class="tiles tiles-3 mt-m">
+          <article class="tile on-light">
+            <div class="tile-copy">
+              <p class="eyebrow">Google</p>
+              <h3 class="tile-title">Meridian</h3>
+              <p class="tile-tag">Bayesian geo-level MMM with ROI-parameterized priors.</p>
+              <p class="tile-desc">A <code>CalibrationBuilder</code> turns experiment results into ROI priors<sup class="cite"><a href="#ref-16">16</a></sup><sup class="cite"><a href="#ref-19">19</a></sup>.</p>
+              <div class="actions"><a class="link link-ext" href="https://github.com/google/meridian">Meridian on GitHub</a></div>
+            </div>
+          </article>
+          <article class="tile on-light">
+            <div class="tile-copy">
+              <p class="eyebrow">Meta</p>
+              <h3 class="tile-title">Robyn</h3>
+              <p class="tile-tag">Ridge regression with evolutionary hyperparameter search.</p>
+              <p class="tile-desc">Three objectives: NRMSE (fit), DECOMP.RSSD (gap between spend share and effect share) and MAPE.LIFT (calibration error against experiments)<sup class="cite"><a href="#ref-9">9</a></sup>.</p>
+              <div class="actions"><a class="link link-ext" href="https://facebookexperimental.github.io/Robyn/docs/features">Robyn features</a></div>
+            </div>
+          </article>
+          <article class="tile on-light">
+            <div class="tile-copy">
+              <p class="eyebrow">PyMC Labs</p>
+              <h3 class="tile-title">PyMC-Marketing</h3>
+              <p class="tile-tag">Bayesian MMM in Python.</p>
+              <p class="tile-desc">Lift tests are added as extra likelihood terms on the saturation curve<sup class="cite"><a href="#ref-17">17</a></sup>.</p>
+              <div class="actions"><a class="link link-ext" href="https://www.pymc-marketing.io/en/stable/notebooks/mmm/mmm_lift_test.html">Lift-test notebook</a></div>
+            </div>
+          </article>
+        </div>
+
+        <div class="proscons mt-l">
+          <div class="proscons-col">
+            <h3>MMM strengths</h3>
+            <ul class="list-pro">
+              <li>Covers all channels, including offline (TV, OOH, print).</li>
+              <li>Privacy-durable: aggregate data, no identity.</li>
+              <li>Captures carryover and long-run effects.</li>
+              <li>Supports budget planning and scenario analysis.</li>
+              <li>Bayesian versions give uncertainty bands.</li>
+            </ul>
+          </div>
+          <div class="proscons-col">
+            <h3>MMM weaknesses</h3>
+            <ul class="list-con">
+              <li>Correlational. Model choice by BIC/WAIC picks the best regression, not the best causal model<sup class="cite"><a href="#ref-13">13</a></sup>.</li>
+              <li>Sensitive to priors and specification<sup class="cite"><a href="#ref-12">12</a></sup>.</li>
+              <li>Slow: quarterly or annual refresh.</li>
+              <li>Low granularity: no creative- or audience-level detail.</li>
+              <li>Cannot extrapolate beyond observed spend<sup class="cite"><a href="#ref-11">11</a></sup>.</li>
+              <li>Selection bias, for example paid search spend that rises <em>because</em> demand rises.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Calibration -->
+    <section class="section on-dark" aria-labelledby="calibration">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">The key link</p>
+          <h2 class="headline" id="calibration" data-toc-label="Calibrating MMM">Calibrating MMM with lift tests.</h2>
+          <p class="lede">MMM priors dominate in small samples. A well-run lift test supplies unbiased, local information about one channel's effect, often exactly what the model lacks. The main tools use it in three different ways.</p>
+        </div>
+
+        <ol class="steps mt-m">
+          <li>
+            <h3>As a prior (Meridian)</h3>
+            <p>The experiment's ROI estimate and standard error become an ROI prior, for example lognormal. CalibrationBuilder adjusts for spend, recency and duration, combines several experiments by Bayesian updating and fits a parametric prior<sup class="cite"><a href="#ref-18">18</a></sup><sup class="cite"><a href="#ref-19">19</a></sup>.</p>
+          </li>
+          <li>
+            <h3>As extra likelihood (PyMC-Marketing)</h3>
+            <p>Each test is a row: channel, baseline spend x, spend change Δx, measured lift Δy, standard error σ. The model's implied f(x + Δx) − f(x) must match Δy within σ, so tests act as "additional observations of the saturation curve"<sup class="cite"><a href="#ref-17">17</a></sup>.</p>
+          </li>
+          <li>
+            <h3>As a selection objective (Robyn)</h3>
+            <p>MAPE.LIFT penalizes candidate models whose decomposed channel contribution over the test window differs from the experiment. Experiments are treated as ground truth<sup class="cite"><a href="#ref-9">9</a></sup>.</p>
+          </li>
+        </ol>
+
+        <div class="prose mt-l">
+          <div class="callout danger">
+            <p class="callout-title">Pitfall: estimand mismatch</p>
+            <p>MMM ROI uses a <strong>zero-spend counterfactual</strong>. Many experiments measure <strong>marginal</strong> lift (a +X% spend increase) or lift against business-as-usual. Translating between them adds uncertainty beyond the experiment's standard error. Check each experiment's recency, duration, granularity, population and complexity before using it<sup class="cite"><a href="#ref-18">18</a></sup>.</p>
+            <p>A user-level conversion-lift test on one platform measures that platform's on-platform audience and attribution window, not total-business offline sales. Scale and convert carefully <span class="flag">practitioner heuristic</span></p>
+          </div>
+
+          <h3>Choose experiments with the MMM in mind</h3>
+          <p>Prioritize channels with large spend, wide MMM posteriors or implausible ROI. Meridian's <a href="https://developers.google.com/meridian/docs/post-modeling/channel-recommendation">channel-calibration score</a> flags such channels<sup class="cite"><a href="#ref-20">20</a></sup>. Run tests at the spend levels the MMM will extrapolate to, and refresh them over time because effects drift <span class="flag">practitioner heuristic</span>. See <a href="planning.html">Planning</a> for test design.</p>
+
+          <div class="callout caveat">
+            <p class="callout-title"><span class="icon icon-warning" aria-hidden="true"></span>Dissent</p>
+            <p>Some practitioners argue that injecting experiment results into an MMM can distort its other parameters. Treat calibration as Bayesian evidence with honest uncertainty, not as a hard constraint. <span class="flag">vendor opinion, not peer-reviewed</span></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. MTA -->
+    <section class="section on-light" aria-labelledby="mta">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Multi-touch attribution</p>
+          <h2 class="headline" id="mta" data-toc-label="MTA">Attribution measures association, not incrementality.</h2>
+          <p class="lede">MTA assigns credit for each conversion across the user-level touchpoints on the path to purchase. It is fast and granular, and correlational by construction.</p>
+        </div>
+
+        <div class="prose mt-m">
+          <p>Rule-based versions include last-click, first-touch, linear, time-decay and position-based. Algorithmic or data-driven versions use Shapley values or Markov chains. Its data needs are user- or device-level event logs (impressions, clicks, conversions), a stable identity graph, and consistent timestamps and conversion windows.</p>
+          <p>MTA credits touches on converting paths but never compares against people who were not exposed. It therefore inherits activity bias and targeting selection bias: the findings of Lewis, Rao &amp; Reiley and Gordon et al. apply directly to user-level observational credit assignment<sup class="cite"><a href="#ref-2">2</a></sup><sup class="cite"><a href="#ref-3">3</a></sup>.</p>
+        </div>
+
+        <div class="proscons mt-m">
+          <div class="proscons-col">
+            <h3>Good for</h3>
+            <ul class="list-pro">
+              <li>Fast, granular, in-flight optimization of digital tactics: keywords, creatives, placements, audiences <span class="flag">practitioner heuristic</span></li>
+              <li>Small, frequent decisions within a channel.</li>
+              <li>Real-time or daily feedback.</li>
+            </ul>
+          </div>
+          <div class="proscons-col">
+            <h3>Limits</h3>
+            <ul class="list-con">
+              <li>Correlational: measures association, not incrementality<sup class="cite"><a href="#ref-3">3</a></sup>.</li>
+              <li>Over-credits lower-funnel and retargeting, which target people already likely to convert, and under-credits upper-funnel, offline and view-through media <span class="flag">practitioner heuristic</span></li>
+              <li>Third-party cookie restrictions, mobile tracking opt-in rules and walled gardens break cross-channel paths <span class="flag">policy details not verified</span></li>
+              <li>Cannot see offline channels (TV, OOH, radio) or long-run brand effects.</li>
+              <li>Platform-reported attribution comes from the seller of the media: a directional signal only <span class="flag">practitioner heuristic</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="prose mt-m">
+          <div class="callout caveat">
+            <p class="callout-title"><span class="icon icon-warning" aria-hidden="true"></span>Incrementality multipliers</p>
+            <p>Experiments can produce <strong>incrementality multipliers</strong> (experiment iROAS ÷ attributed ROAS) that rescale MTA credit by channel. This is a common practice, not a standardized method. <span class="flag">practitioner heuristic</span></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. Quasi-experiments -->
+    <section class="section on-mist" aria-labelledby="causalimpact">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Quasi-experiments</p>
+          <h2 class="headline" id="causalimpact" data-toc-label="CausalImpact &amp; SC">CausalImpact and synthetic control.</h2>
+          <p class="lede">When randomization is not possible but a clear intervention exists (a launch, a market entry, a channel switched off, a non-random geo test), forecast what would have happened and compare.</p>
+        </div>
+
+        <div class="split mt-m">
+          <div class="prose">
+            <h3>CausalImpact (BSTS)</h3>
+            <p><a href="https://doi.org/10.1214/14-AOAS788">Brodersen et al. (2015)</a> fit a <strong>Bayesian structural time-series</strong> model on the pre-period, with local level/trend, seasonality and a regression on control series using spike-and-slab covariate selection. The model forecasts the post-period counterfactual. Impact is observed minus counterfactual, reported pointwise, cumulatively and as a running average with credible intervals<sup class="cite"><a href="#ref-21">21</a></sup><sup class="cite"><a href="#ref-22">22</a></sup>.</p>
+            <p>It generalizes difference-in-differences and synthetic control by adding trend, seasonality and time-varying uncertainty<sup class="cite"><a href="#ref-21">21</a></sup>.</p>
+            <h3>Synthetic control</h3>
+            <p><a href="https://redam94.github.io/second-brain/Research/Econometrics/Identification-Strategies/Synthetic-Control">Synthetic control</a> builds the counterfactual for one treated unit as a weighted combination of donor units matched on the pre-period, with inference from permutation or placebo tests<sup class="cite"><a href="#ref-26">26</a></sup>. It underpins geo-test tools such as GeoLift; see <a href="geo-testing.html">Geo testing</a>.</p>
+          </div>
+          <div class="callout note">
+            <p class="callout-title">Assumptions (official docs)</p>
+            <p>The control series are <strong>not affected by the intervention</strong>, and the pre-period relationship between controls and target <strong>stays stable</strong> in the post-period<sup class="cite"><a href="#ref-24">24</a></sup>. Neither can be fully verified from the data. Spillover into controls or a concurrent shock breaks the estimate.</p>
+          </div>
+        </div>
+
+        <h3 class="subhead mt-l">Evidence from an ad campaign</h3>
+        <p class="muted mt-s">A 6-week search campaign geo-randomized to 95 of 190 DMAs, analyzed three ways<sup class="cite"><a href="#ref-23">23</a></sup>.</p>
+        <ul class="stats mt-m">
+          <li class="stat">
+            <span class="stat-value">22%</span>
+            <span class="stat-label">Lift with randomized controls, interval [13%, 30%]</span>
+            <span class="stat-note">CausalImpact empirical application<sup class="cite"><a href="#ref-23">23</a></sup></span>
+          </li>
+          <li class="stat">
+            <span class="stat-value">21%</span>
+            <span class="stat-label">Lift with observational controls (industry search volume), interval [12%, 30%]</span>
+            <span class="stat-note">CausalImpact empirical application<sup class="cite"><a href="#ref-23">23</a></sup></span>
+          </li>
+          <li class="stat">
+            <span class="stat-value">2%</span>
+            <span class="stat-label">Placebo test on untreated DMAs, interval [−6%, 10%]</span>
+            <span class="stat-note">CausalImpact empirical application<sup class="cite"><a href="#ref-23">23</a></sup></span>
+          </li>
+        </ul>
+
+        <h3 class="subhead mt-l">Planning a CausalImpact analysis</h3>
+        <ul class="checklist checklist-2 mt-m">
+          <li><strong>Long, clean pre-period</strong><span class="muted">The paper's ad example used about 1 year of baseline data<sup class="cite"><a href="#ref-23">23</a></sup>.</span></li>
+          <li><strong>Predictive but unexposed controls</strong><span class="muted">Contaminated controls bias the counterfactual<sup class="cite"><a href="#ref-24">24</a></sup>.</span></li>
+          <li><strong>Keep the post-period short enough</strong><span class="muted">Intervals widen with horizon, so long post-periods lose power<sup class="cite"><a href="#ref-25">25</a></sup>.</span></li>
+          <li><strong>Pick the right summary</strong><span class="muted">Cumulative impact for flow KPIs (sales), running average for stock KPIs (subscribers)<sup class="cite"><a href="#ref-25">25</a></sup>.</span></li>
+          <li><strong>Always run placebo or backtest checks</strong><span class="muted">Fake intervention dates and untreated units.</span></li>
+          <li><strong>Know its rank</strong><span class="muted">Much stronger than naive before/after or MTA, weaker than randomization.</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 9. Market response benchmarks -->
+    <section class="section on-light" aria-labelledby="benchmarks">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Market response models</p>
+          <h2 class="headline" id="benchmarks" data-toc-label="Benchmarks">Benchmarks for a sanity check.</h2>
+          <p class="lede">MMM descends from the econometric market response tradition: the 4Ps, Koyck distributed lags, transfer functions, cointegration and market-share models. Its empirical generalizations make useful priors and plausibility checks.</p>
+        </div>
+
+        <ul class="stats mt-m">
+          <li class="stat">
+            <span class="stat-value">≈0.10</span>
+            <span class="stat-label">Short-run advertising elasticity (meta-analytic range 0.10–0.22); 0.10 is a recommended conservative null</span>
+            <span class="stat-note">Advertising and Promotion Effects<sup class="cite"><a href="#ref-10">10</a></sup></span>
+          </li>
+          <li class="stat">
+            <span class="stat-value">≈2×</span>
+            <span class="stat-label">Long-run effect relative to the short-run effect</span>
+            <span class="stat-note">Advertising and Promotion Effects<sup class="cite"><a href="#ref-10">10</a></sup></span>
+          </li>
+          <li class="stat">
+            <span class="stat-value">0.26 vs 0.05</span>
+            <span class="stat-label">Elasticity of new vs established products (Lodish et al. 1995): elasticities decline as brands mature</span>
+            <span class="stat-note">Advertising and Promotion Effects<sup class="cite"><a href="#ref-10">10</a></sup></span>
+          </li>
+        </ul>
+
+        <div class="prose mt-m">
+          <p>Price elasticity is larger in magnitude than advertising elasticity<sup class="cite"><a href="#ref-10">10</a></sup>. For the wider lineage, see the <a href="https://redam94.github.io/second-brain/Research/Market-Response-Models/Introduction/Market-Response-Models---Overview">market response models overview</a><sup class="cite"><a href="#ref-27">27</a></sup>.</p>
+          <div class="callout tip">
+            <p class="callout-title">How to use them</p>
+            <p>If an MMM or MTA implies an advertising elasticity far above these benchmarks for a mature brand, check it for bias before acting on it.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Statement -->
+    <section class="statement on-dark" aria-label="Key idea">
+      <div class="wrap">
+        <figure>
+          <blockquote>Calibrate MMM with lift tests. Use attribution for in-flight optimization. Use experiments to arbitrate disagreements.</blockquote>
+          <figcaption>Common practitioner shorthand for unified measurement.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- 10. Triangulation -->
+    <section class="section on-mist" aria-labelledby="triangulation">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Unified measurement</p>
+          <h2 class="headline" id="triangulation" data-toc-label="Triangulation">One loop, four kinds of evidence.</h2>
+          <p class="lede">No single method is both causal and comprehensive. Give each method the question it answers best and let them check one another. <span class="flag">practitioner framework</span></p>
+        </div>
+
+        <figure class="figure mt-m">
+          <div class="figure-media">
+            <svg viewBox="0 0 760 450" width="760" height="450" role="img" aria-labelledby="tri-title tri-desc">
+              <title id="tri-title">The unified measurement loop</title>
+              <desc id="tri-desc">Bayesian MMM, the strategic layer, flags channels to test. Geo and user-level tests, the causal ground truth, calibrate the MMM's ROI priors and curves. The MMM sets channel budgets that MTA and platform attribution, the tactical layer, optimize within, and experiments rescale attribution credit by incrementality. Quasi-experiments fill gaps where randomization is not possible, and response benchmarks provide sanity checks and priors for the MMM.</desc>
+              <defs>
+                <marker id="tri-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0 0 L10 5 L0 10 z" fill="#606d3d"/>
+                </marker>
+              </defs>
+
+              <!-- Arrows -->
+              <g stroke="#606d3d" stroke-width="2" fill="none">
+                <line x1="220" y1="70" x2="262" y2="70" stroke-dasharray="5 4" marker-end="url(#tri-arrow)"/>
+                <line x1="540" y1="70" x2="498" y2="70" stroke-dasharray="5 4" marker-end="url(#tri-arrow)"/>
+                <line x1="300" y1="120" x2="152" y2="322" marker-end="url(#tri-arrow)"/>
+                <line x1="210" y1="330" x2="354" y2="128" marker-end="url(#tri-arrow)"/>
+                <line x1="460" y1="120" x2="598" y2="322" marker-end="url(#tri-arrow)"/>
+                <line x1="300" y1="396" x2="452" y2="396" marker-end="url(#tri-arrow)"/>
+              </g>
+
+              <!-- Boxes -->
+              <rect x="20" y="24" width="200" height="92" rx="20" fill="#f5f5f7" stroke="#d2d2d7" stroke-width="1.5" stroke-dasharray="6 4"/>
+              <rect x="270" y="20" width="220" height="100" rx="20" fill="#f5f5f7" stroke="#606d3d" stroke-width="2"/>
+              <rect x="540" y="24" width="200" height="92" rx="20" fill="#f5f5f7" stroke="#d2d2d7" stroke-width="1.5" stroke-dasharray="6 4"/>
+              <rect x="20" y="330" width="280" height="100" rx="20" fill="#606d3d"/>
+              <rect x="460" y="330" width="280" height="100" rx="20" fill="#f5f5f7" stroke="#d2d2d7" stroke-width="1.5"/>
+
+              <!-- Box labels -->
+              <g text-anchor="middle" font-family="inherit">
+                <text x="120" y="64" font-size="16" font-weight="600" fill="#1d1d1f">Quasi-experiments</text>
+                <text x="120" y="90" font-size="13" fill="#6e6e73">Where you can't randomize</text>
+
+                <text x="380" y="62" font-size="18" font-weight="600" fill="#1d1d1f">Bayesian MMM</text>
+                <text x="380" y="90" font-size="13" fill="#6e6e73">Strategic layer · quarterly</text>
+
+                <text x="640" y="64" font-size="16" font-weight="600" fill="#1d1d1f">Response benchmarks</text>
+                <text x="640" y="90" font-size="13" fill="#6e6e73">Sanity checks &amp; priors</text>
+
+                <text x="160" y="374" font-size="18" font-weight="600" fill="#ffffff">Geo &amp; user-level tests</text>
+                <text x="160" y="402" font-size="13" fill="#ffffff">Causal ground truth</text>
+
+                <text x="600" y="374" font-size="17" font-weight="600" fill="#1d1d1f">MTA &amp; attribution</text>
+                <text x="600" y="402" font-size="13" fill="#6e6e73">Tactical layer · in-flight</text>
+              </g>
+
+              <!-- Arrow labels -->
+              <g font-family="inherit" font-size="13" fill="#4a5532">
+                <text x="208" y="200" text-anchor="end">Flags uncertain,</text>
+                <text x="208" y="218" text-anchor="end">high-spend channels</text>
+                <text x="318" y="238">Calibrates ROI</text>
+                <text x="318" y="256">priors &amp; curves</text>
+                <text x="548" y="200">Sets channel</text>
+                <text x="548" y="218">budgets</text>
+                <text x="376" y="362" text-anchor="middle">Rescales credit</text>
+                <text x="376" y="380" text-anchor="middle">by incrementality</text>
+              </g>
+            </svg>
+          </div>
+          <figcaption>Solid arrows are the operating loop; dashed arrows are supporting evidence. When methods disagree, the well-powered experiment arbitrates for that channel, period and spend level.</figcaption>
+        </figure>
+
+        <div class="tiles tiles-4 mt-l">
+          <article class="tile on-light">
+            <div class="tile-copy">
+              <span class="icon-badge tile-icon"><span class="icon icon-layers" aria-hidden="true"></span></span>
+              <h3 class="tile-title">MMM</h3>
+              <p class="tile-tag">Strategic layer.</p>
+              <p class="tile-desc">Cross-channel budget allocation, offline and long-run effects, scenario planning. Refreshed quarterly.</p>
+            </div>
+          </article>
+          <article class="tile on-dark">
+            <div class="tile-copy">
+              <span class="icon-badge tile-icon"><span class="icon icon-split" aria-hidden="true"></span></span>
+              <h3 class="tile-title">Experiments</h3>
+              <p class="tile-tag">Causal ground truth.</p>
+              <p class="tile-desc">Geo and user-level tests validate and calibrate the MMM's channel ROIs and curves, and test big bets and new channels.</p>
+            </div>
+          </article>
+          <article class="tile on-light">
+            <div class="tile-copy">
+              <span class="icon-badge tile-icon"><span class="icon icon-target" aria-hidden="true"></span></span>
+              <h3 class="tile-title">MTA</h3>
+              <p class="tile-tag">Tactical layer.</p>
+              <p class="tile-desc">In-flight optimization within channels, rescaled by experiment-derived incrementality factors.</p>
+            </div>
+          </article>
+          <article class="tile on-light">
+            <div class="tile-copy">
+              <span class="icon-badge tile-icon"><span class="icon icon-scale" aria-hidden="true"></span></span>
+              <h3 class="tile-title">Quasi-experiments</h3>
+              <p class="tile-tag">Gap fillers.</p>
+              <p class="tile-desc">CausalImpact and synthetic control where randomization is not possible.</p>
+            </div>
+          </article>
+        </div>
+
+        <h3 class="subhead mt-l">The operating loop</h3>
+        <ol class="steps steps-vertical mt-m">
+          <li><h3>MMM flags channels</h3><p>Uncertain, high-spend or implausible-ROI channels become test candidates.</p></li>
+          <li><h3>Design a geo or user-level test</h3><p>At the spend levels the MMM will extrapolate to. See <a href="planning.html">Planning</a>.</p></li>
+          <li><h3>Feed the lift into the MMM</h3><p>As a prior or as an extra likelihood, with its estimand translated honestly.</p></li>
+          <li><h3>Re-optimize the budget</h3><p>On mROAS, computed per posterior draw, inside the observed spend range.</p></li>
+          <li><h3>Rescale MTA, then repeat</h3><p>Apply incrementality factors to attribution, and re-test as effects drift.</p></li>
+        </ol>
+
+        <div class="prose mt-l">
+          <div class="callout note">
+            <p class="callout-title">When methods disagree</p>
+            <p>Trust the well-powered experiment for <em>that channel, period and spend level</em>. Then ask why the model differs: selection bias, mis-specified adstock, saturation extrapolation, or estimand mismatch. <span class="flag">practitioner heuristic</span></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11. Comparison table -->
+    <section class="section on-light" aria-labelledby="comparison">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Side by side</p>
+          <h2 class="headline" id="comparison" data-toc-label="Comparison">Six methods compared.</h2>
+          <p class="lede">What each method answers, how fast, at what cost, and how much causal weight it can carry. For geo vs user-level tests in depth, see <a href="compare.html">Compare</a>.</p>
+        </div>
+
+        <div class="table-scroll mt-m" role="region" aria-label="Comparison of six measurement methods" tabindex="0">
+          <table class="compare compare-wide">
+            <caption>Measurement methods at a glance</caption>
+            <thead>
+              <tr><th scope="col">Method</th><th scope="col">Question answered</th><th scope="col">Granularity</th><th scope="col">Speed</th><th scope="col">Cost</th><th scope="col">Causal strength</th><th scope="col">Data needs</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">User-level RCT, conversion lift, ghost ads</th><td>Incremental effect of a campaign on one platform</td><td>User; one platform or campaign</td><td>Weeks</td><td>Medium (holdout opportunity cost; platform-run often free)</td><td class="em">Highest (randomized)</td><td>User identity, exposure logging, conversion tracking; very large samples for noisy KPIs<sup class="cite"><a href="#ref-5">5</a></sup></td></tr>
+              <tr><th scope="row">Geo experiment (matched-market, GeoLift, TBR)</th><td>Incremental effect of a channel or spend level on total business KPIs, incl. offline</td><td>Geo (DMA or region)</td><td>4–8+ weeks plus pre-period and cooldown</td><td>Medium–high (holdout regions, media)</td><td class="em">High (randomized or synthetic control)</td><td>Geo-level KPI history, enough geos, stable pre-period</td></tr>
+              <tr><th scope="row">CausalImpact / BSTS, synthetic control</th><td>Effect of a specific, non-randomized intervention</td><td>Market or time series</td><td>Fast once data exists</td><td>Low</td><td>Medium (assumes unaffected, stable controls)</td><td>Long pre-period, predictive unaffected controls</td></tr>
+              <tr><th scope="row">Bayesian MMM</th><td>Channel contributions, ROAS/mROAS, budget allocation, long-run effects</td><td>Channel × week (× geo)</td><td>Slow (quarterly refresh)</td><td>Medium (modeling effort; no media cost)</td><td>Low–medium; medium–high when calibrated</td><td>2–3 years of weekly spend or exposure, KPI, controls; spend variation; no identity</td></tr>
+              <tr><th scope="row">MTA / data-driven attribution</th><td>Credit across digital touchpoints for in-flight optimization</td><td>User path; tactic or creative</td><td>Real-time or daily</td><td>Low–medium (tooling)</td><td>Low (correlational; activity and selection bias)</td><td>User-level logs, identity graph; digital only</td></tr>
+              <tr><th scope="row">Market response benchmarks</th><td>Plausibility ranges (elasticities, decay)</td><td>Category or brand</td><td>Instant</td><td>Very low</td><td>Contextual (meta-analytic)</td><td>Literature</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small muted mt-s">Speed, cost and causal-strength ratings are this guide's qualitative summary, not measured values.</p>
+      </div>
+    </section>
+
+    <!-- 12. Sensitivity analysis -->
+    <section class="section on-mist" aria-labelledby="sensitivity">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Validation</p>
+          <h2 class="headline" id="sensitivity" data-toc-label="Sensitivity checks">Sensitivity analysis checklist.</h2>
+          <p class="lede">Observational estimates are only as good as their assumptions. Run these checks before a model's numbers move a budget.</p>
+        </div>
+
+        <ul class="checklist mt-m">
+          <li><strong>Prior sensitivity</strong><span class="muted">Refit the MMM under alternative priors (half-normal vs uniform on β, alternative K priors) and report how ROAS and mROAS move. Jin et al. show results can shift substantially<sup class="cite"><a href="#ref-12">12</a></sup>.</span></li>
+          <li><strong>Specification sensitivity</strong><span class="muted">Cross adstock {geometric, delayed/Weibull} with saturation {Hill, reach}. Compare by BIC/WAIC and holdout error, remembering that fit criteria are not causal validity<sup class="cite"><a href="#ref-13">13</a></sup>.</span></li>
+          <li><strong>Residual diagnostics</strong><span class="muted">Check autocorrelation. Persistent residual autocorrelation out to about 15 weeks signalled misspecification in the case study<sup class="cite"><a href="#ref-13">13</a></sup>.</span></li>
+          <li><strong>Out-of-sample, time-series CV</strong><span class="muted">Robyn uses validation NRMSE as its objective when time-series validation is on<sup class="cite"><a href="#ref-9">9</a></sup>.</span></li>
+          <li><strong>Parameter recovery on simulated data</strong><span class="muted">Fit the model to data generated with known truth to learn what it can identify<sup class="cite"><a href="#ref-13">13</a></sup>.</span></li>
+          <li><strong>Placebo tests for quasi-experiments</strong><span class="muted">Fake intervention dates and untreated units<sup class="cite"><a href="#ref-23">23</a></sup>.</span></li>
+          <li><strong>Unobserved-confounding sensitivity</strong><span class="muted">How strong would a hidden confounder have to be to explain the effect? <span class="flag">no specific method verified</span></span></li>
+          <li><strong>Experiment holdback check</strong><span class="muted">Compare the MMM's predicted lift for the test window with the observed lift <em>before</em> calibrating<sup class="cite"><a href="#ref-9">9</a></sup>.</span></li>
+        </ul>
+
+        <div class="prose mt-m">
+          <div class="callout caveat">
+            <p class="callout-title"><span class="icon icon-warning" aria-hidden="true"></span>Secondary figure</p>
+            <p>Robyn reports that uncalibrated models differed by about 25% from ground truth on average, citing a third-party whitepaper that was not checked for this guide<sup class="cite"><a href="#ref-9">9</a></sup>. <span class="flag">unverified</span></p>
+          </div>
+        </div>
+
+        <h3 class="subhead mt-l">Pitfalls to avoid</h3>
+        <ul class="checklist checklist-2 mt-m">
+          <li><strong>MMM or MTA output read as causal</strong><span class="muted">without any experimental anchor.</span></li>
+          <li><strong>Optimizing on ROAS instead of mROAS</strong><span class="muted">moves money into saturated channels.</span></li>
+          <li><strong>Extrapolating saturation curves</strong><span class="muted">beyond observed spend<sup class="cite"><a href="#ref-11">11</a></sup>.</span></li>
+          <li><strong>Posterior means in place of per-draw metrics</strong><span class="muted">ignores parameter correlations<sup class="cite"><a href="#ref-15">15</a></sup>.</span></li>
+          <li><strong>Estimand mismatch in calibration</strong><span class="muted">marginal vs zero-spend, platform vs total business, short window vs carryover<sup class="cite"><a href="#ref-18">18</a></sup>.</span></li>
+          <li><strong>Paid search selection bias</strong><span class="muted">search spend follows demand.</span></li>
+          <li><strong>CausalImpact with contaminated controls</strong><span class="muted">or a structural break in the post-period<sup class="cite"><a href="#ref-24">24</a></sup>.</span></li>
+          <li><strong>Platform attribution read as incrementality</strong><span class="muted">it comes from the seller of the media.</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Sources -->
+    <section class="section on-light" aria-labelledby="sources">
+      <div class="wrap">
+        <div class="section-head">
+          <h2 class="headline" id="sources">Sources &amp; further reading</h2>
+        </div>
+        <ol class="refs mt-m">
+          <li id="ref-1"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Research-Methodology/Activity-Bias-in-Advertising">Activity Bias in Advertising</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">activity bias; observational estimates far above RCT benchmarks (5.4% RCT vs 872–1198% observational).</span></li>
+          <li id="ref-2"><a class="ref-title" href="https://doi.org/10.1145/1963405.1963431">Here, There, and Everywhere: Correlated Online Behaviors Can Lead to Overestimates of the Effects of Advertising</a> <span class="ref-meta">Lewis, Rao &amp; Reiley (2011), WWW 2011, pp. 157–166</span><span class="ref-supports">activity bias in exposed-vs-unexposed comparisons.</span><span class="ref-caveat"><span class="flag">caveat</span> DOI confirmed via search; the publisher page could not be opened during research.</span></li>
+          <li id="ref-3"><a class="ref-title" href="https://www.kellogg.northwestern.edu/faculty/gordon_b/files/fb_comparison.pdf">A Comparison of Approaches to Advertising Measurement</a> <span class="ref-meta">Gordon, Zettelmeyer, Bhargava &amp; Chapsky (2019), Marketing Science 38(2):193–225</span><span class="ref-supports">observational methods vs 15 Facebook RCTs.</span><span class="ref-links"><a href="https://econpapers.repec.org/RePEc:inm:ormksc:v:38:y:2019:i:2:p:193-225">RePEc record</a></span></li>
+          <li id="ref-4"><a class="ref-title" href="https://arxiv.org/abs/2201.07055">Close Enough?</a> <span class="ref-meta">Gordon, Moakler &amp; Zettelmeyer (2023), Marketing Science 42(4):768–793</span><span class="ref-supports">663 experiments; median DML and SPSM lift estimates vs median RCT lifts (abstract figures).</span></li>
+          <li id="ref-5"><a class="ref-title" href="https://ideas.repec.org/a/oup/qjecon/v130y2015i4p1941-1973.html">The Unfavorable Economics of Measuring the Returns to Advertising</a> <span class="ref-meta">Lewis &amp; Rao (2015), QJE 130(4):1941–1973</span><span class="ref-supports">25 RCTs; ROI intervals over 100 pp wide; more than 10M person-weeks.</span></li>
+          <li id="ref-6"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Market-Response-Models/Bayesian-Media-Mix-Modeling/Bayesian-Media-Mix-Modeling---Overview">Bayesian Media Mix Modeling: Overview</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">MMM definition, combined equation, why Bayesian, geo granularity.</span></li>
+          <li id="ref-7"><a class="ref-title" href="https://research.google/pubs/bayesian-methods-for-media-mix-modeling-with-carryover-and-shape-effects/">Bayesian Methods for Media Mix Modeling with Carryover and Shape Effects</a> <span class="ref-meta">Jin, Wang, Sun, Chan &amp; Koehler (2017), Google Research</span><span class="ref-supports">primary source of the MMM specification.</span></li>
+          <li id="ref-8"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Market-Response-Models/Bayesian-Media-Mix-Modeling/Carryover-(Adstock)-Functional-Forms">Carryover (Adstock) Functional Forms</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">geometric and delayed adstock; L = 13.</span></li>
+          <li id="ref-9"><a class="ref-title" href="https://facebookexperimental.github.io/Robyn/docs/features">Robyn: Features</a> <span class="ref-meta">Meta, documentation</span><span class="ref-supports">Weibull adstock; NRMSE, DECOMP.RSSD, MAPE.LIFT; time-series validation; uncalibrated-gap figure.</span><span class="ref-caveat"><span class="flag">caveat</span> The about-25% uncalibrated gap is quoted from a third-party whitepaper not checked here.</span></li>
+          <li id="ref-10"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Market-Response-Models/Empirical-Findings-and-Applications/Advertising-and-Promotion-Effects">Advertising and Promotion Effects</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">elasticity about 0.10; long run about 2×; 6–9 month duration; Lodish et al. 1995.</span></li>
+          <li id="ref-11"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Market-Response-Models/Bayesian-Media-Mix-Modeling/Shape-(Saturation)-Effects">Shape (Saturation) Effects</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">Hill and reach transforms; identifiability; no extrapolation.</span></li>
+          <li id="ref-12"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Market-Response-Models/Bayesian-Media-Mix-Modeling/Bayesian-Estimation-and-Priors-for-MMM">Bayesian Estimation and Priors for MMM</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">typical priors, prior dominance, prior sensitivity.</span></li>
+          <li id="ref-13"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Market-Response-Models/Bayesian-Media-Mix-Modeling/MMM-Model-Selection-and-Application">MMM Model Selection and Application</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">2-year vs 60-year bias; BIC is not causal; shampoo case; orthogonalization; residual autocorrelation; simulation checks.</span></li>
+          <li id="ref-14"><a class="ref-title" href="https://research.google/pubs/challenges-and-opportunities-in-media-mix-modeling/">Challenges and Opportunities in Media Mix Modeling</a> <span class="ref-meta">Chan &amp; Perry (2017), Google Research</span><span class="ref-supports">MMM is correlational unless narrow conditions hold.</span></li>
+          <li id="ref-15"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Market-Response-Models/Bayesian-Media-Mix-Modeling/ROAS,-mROAS,-and-Optimal-Media-Mix">ROAS, mROAS, and Optimal Media Mix</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">ROAS and mROAS definitions; per-draw computation; multimodal optimum.</span></li>
+          <li id="ref-16"><a class="ref-title" href="https://github.com/google/meridian">Meridian</a> <span class="ref-meta">Google, GitHub repository</span><span class="ref-supports">open-source Bayesian geo-level MMM.</span></li>
+          <li id="ref-17"><a class="ref-title" href="https://www.pymc-marketing.io/en/stable/notebooks/mmm/mmm_lift_test.html">Lift test calibration</a> <span class="ref-meta">PyMC-Marketing, documentation notebook</span><span class="ref-supports">lift tests as likelihood terms on the saturation curve.</span></li>
+          <li id="ref-18"><a class="ref-title" href="https://developers.google.com/meridian/docs/advanced-modeling/roi-priors-and-calibration">ROI priors and calibration</a> <span class="ref-meta">Google Meridian, documentation</span><span class="ref-supports">experiments as ROI priors; estimand-mismatch warnings.</span></li>
+          <li id="ref-19"><a class="ref-title" href="https://developers.google.com/meridian/docs/advanced-modeling/set-custom-priors-past-experiments">Set custom ROI priors using past experiments</a> <span class="ref-meta">Google Meridian, documentation</span><span class="ref-supports">CalibrationBuilder and its spend, recency and duration adjustments.</span></li>
+          <li id="ref-20"><a class="ref-title" href="https://developers.google.com/meridian/docs/post-modeling/channel-recommendation">Channel calibration recommendation and score</a> <span class="ref-meta">Google Meridian, documentation</span><span class="ref-supports">which channels to test next.</span></li>
+          <li id="ref-21"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Bayesian-Statistics/Causal-Inference/Time-Series-Causal-Inference/Brodersen-2015---Overview">Brodersen 2015: Overview</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">CausalImpact model; relation to DiD and synthetic control.</span></li>
+          <li id="ref-22"><a class="ref-title" href="https://doi.org/10.1214/14-AOAS788">Inferring causal impact using Bayesian structural time-series models</a> <span class="ref-meta">Brodersen et al. (2015), Annals of Applied Statistics</span><span class="ref-supports">the CausalImpact method.</span></li>
+          <li id="ref-23"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Bayesian-Statistics/Causal-Inference/Time-Series-Causal-Inference/CausalImpact-Empirical-Application">CausalImpact Empirical Application</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">22%, 21% and placebo 2% results; about 1 year of pre-period data; placebo checks.</span></li>
+          <li id="ref-24"><a class="ref-title" href="https://google.github.io/CausalImpact/CausalImpact.html">CausalImpact R package documentation</a> <span class="ref-meta">Google</span><span class="ref-supports">unaffected-controls and stable-relationship assumptions.</span></li>
+          <li id="ref-25"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Bayesian-Statistics/Causal-Inference/Time-Series-Causal-Inference/Counterfactual-Impact-Estimation">Counterfactual Impact Estimation</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">pointwise, cumulative and running-average impact; widening intervals.</span></li>
+          <li id="ref-26"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Econometrics/Identification-Strategies/Synthetic-Control">Synthetic Control</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">synthetic control definition and placebo inference.</span></li>
+          <li id="ref-27"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Market-Response-Models/Introduction/Market-Response-Models---Overview">Market Response Models: Overview</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">market response modeling lineage.</span></li>
+          <li id="ref-28"><a class="ref-title" href="https://redam94.github.io/second-brain/Research/Research-Methodology/Experimental-Design/Power-Analysis-and-Sample-Size">Power Analysis and Sample Size</a> <span class="ref-meta">Second-brain note</span><span class="ref-supports">further reading on planning the experiments that calibrate models.</span></li>
+        </ol>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer on-dark">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <p class="footer-brand">Geo vs User-Level Testing</p>
+          <p class="footer-about">A practitioner guide to media incrementality testing and the measurement methods around it, built on the author's <a href="https://redam94.github.io/second-brain/">second-brain notes</a>.</p>
+        </div>
+        <div>
+          <h2>Guide</h2>
+          <ul>
+            <li><a href="index.html">Overview</a></li>
+            <li><a href="geo-testing.html">Geo testing</a></li>
+            <li><a href="user-level-testing.html">User-level testing</a></li>
+            <li><a href="compare.html">Compare</a></li>
+            <li><a href="planning.html">Planning</a></li>
+            <li><a href="other-methods.html">Other methods</a></li>
+            <li><a href="sources.html">Sources</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>From the notes</h2>
+          <ul>
+            <li><a href="https://redam94.github.io/second-brain/Research/Econometrics/Foundations/The-Experimental-Ideal">The Experimental Ideal</a></li>
+            <li><a href="https://redam94.github.io/second-brain/Research/Econometrics/Identification-Strategies/Synthetic-Control-Requirements">Synthetic Control Requirements</a></li>
+            <li><a href="https://redam94.github.io/second-brain/Research/Research-Methodology/Experimental-Design/Power-Analysis-and-Sample-Size">Power Analysis and Sample Size</a></li>
+            <li><a href="https://redam94.github.io/second-brain/Research/Market-Response-Models/Bayesian-Media-Mix-Modeling/Bayesian-Media-Mix-Modeling---Overview">Bayesian Media Mix Modeling</a></li>
+            <li><a href="https://redam94.github.io/second-brain/">Second brain home</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-base">
+        <p>Illustrations and icons generated with fal. Sources are cited inline on every page.</p>
+        <p><a href="https://redam94.github.io/">redam94.github.io</a></p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

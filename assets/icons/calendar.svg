@@ -1,0 +1,24 @@
+<svg viewBox="0 0 816 816" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
+  <g id="calendar" fill="none" stroke="#606d3d" stroke-width="44" stroke-linecap="round" stroke-linejoin="round">
+    <path id="frame" d="M163 148H112a64 64 0 0 0-64 64v488a64 64 0 0 0 64 64h592a64 64 0 0 0 64-64V212a64 64 0 0 0-64-64h-51M245 148h326" />
+    <g id="bindings">
+      <rect x="163" y="52" width="82" height="170" rx="41" />
+      <rect x="571" y="52" width="82" height="170" rx="41" />
+    </g>
+    <path id="header-divider" d="M48 286h720" />
+    <g id="blank-grid">
+      <rect x="112" y="330" width="106" height="106" rx="10" />
+      <rect x="274" y="330" width="106" height="106" rx="10" />
+      <rect x="436" y="330" width="106" height="106" rx="10" />
+      <rect x="598" y="330" width="106" height="106" rx="10" />
+      <rect x="112" y="460" width="106" height="106" rx="10" />
+      <rect x="274" y="460" width="106" height="106" rx="10" />
+      <rect x="436" y="460" width="106" height="106" rx="10" />
+      <rect x="598" y="460" width="106" height="106" rx="10" />
+      <rect x="112" y="590" width="106" height="106" rx="10" />
+      <rect x="274" y="590" width="106" height="106" rx="10" />
+      <rect x="436" y="590" width="106" height="106" rx="10" />
+      <rect x="598" y="590" width="106" height="106" rx="10" />
+    </g>
+  </g>
+</svg>
