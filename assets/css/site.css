@@ -1174,3 +1174,21 @@ details.accordion:last-of-type { border-bottom: 1px solid var(--rule); }
 }
 .pb-0 { padding-bottom: 0 !important; }
 .meta > span:first-child { margin-left: 0; padding-left: 0; border-left: 0; }
+
+/* ---------- Background images on dark bars (fal-generated, assets/img/bg) ---------- */
+.on-dark.has-bg {
+  background-color: #000;
+  background-image:
+    linear-gradient(180deg, rgb(0 0 0 / 0.55) 0%, rgb(0 0 0 / 0.35) 45%, rgb(0 0 0 / 0.75) 100%),
+    var(--bg-image);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.bg-geo { --bg-image: url("../img/bg/geo.webp"); }
+.bg-user { --bg-image: url("../img/bg/user.webp"); }
+.bg-compare { --bg-image: url("../img/bg/compare.webp"); }
+.bg-planning { --bg-image: url("../img/bg/planning.webp"); }
+.bg-methods { --bg-image: url("../img/bg/methods.webp"); }
+.bg-sources { --bg-image: url("../img/bg/sources.webp"); }
+.bg-statement { --bg-image: url("../img/bg/statement.webp"); }
